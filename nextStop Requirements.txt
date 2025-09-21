@@ -1,0 +1,24 @@
+Core Features:
+
+User registration/login
+Add/view flights & schedules
+Show flights for a route & date
+Show available seats for advance booking
+Book seats & issue tickets for passengers
+Show booked seats with passenger info
+Fares per seat class while booking
+Payment tracking
+Ticket cancellation & refunds
+Flight status updates
+
+
+ Features 1 → users table
+✅ Features 2,3,10 → airlines, airports, flight_routes, flight_schedules, flight_instances tables
+✅ Features 4,6 → seats, aircraft, tickets tables
+✅ Feature 5 → bookings, tickets, passengers tables
+✅ Feature 7 → fares, seat_classes tables
+✅ Feature 8 → payments table
+✅ Feature 9 → cancellations, refunds tables
+
+
+Mermaid ER reference link:- https://shorturl.at/zjWgI
