@@ -1,25 +1,30 @@
-// backend/db.js
-import mysql from 'mysql2';
+import mysql from 'mysql2/promise';
 
-let db;
+let pool;
 
 const connectDB = async () => {
   try {
-    db = mysql.createConnection({
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-    });
-
-    await db.connect();
-    console.log('Connected to MySQL');
+    if (!pool) {
+      pool = mysql.createPool({
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME,
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0,
+      });
+    }
+    // Test a connection
+    const connection = await pool.getConnection();
+    await connection.ping();
+    connection.release();
+    console.log('MySQL pool is ready');
   } catch (err) {
-    console.error('Database connection failed:', err);
+    console.error('MySQL pool initialization failed:', err);
     throw err;
   }
 };
 
-// Export both the connection function and the db instance
 export default connectDB;
-export { db };
+export { pool };

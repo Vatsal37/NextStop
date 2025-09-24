@@ -10,6 +10,7 @@ Fares per seat class while booking
 Payment tracking
 Ticket cancellation & refunds
 Flight status updates
+Email notifications for bookings/cancellations
 
 
  Features 1 → users table

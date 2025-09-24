@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Sep 21, 2025 at 03:12 PM
+-- Generation Time: Sep 24, 2025 at 07:00 AM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -41,7 +41,14 @@ CREATE TABLE IF NOT EXISTS `aircraft` (
   UNIQUE KEY `registration_number` (`registration_number`),
   KEY `idx_aircraft_airline` (`airline_id`),
   KEY `idx_aircraft_reg` (`registration_number`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `aircraft`
+--
+
+INSERT INTO `aircraft` (`aircraft_id`, `airline_id`, `aircraft_model`, `registration_number`, `manufacturer`, `total_seats`, `is_active`, `created_at`) VALUES
+(1, 1, 'A320', 'N-NS001', 'Airbus', 6, 1, '2025-09-23 09:22:04');
 
 -- --------------------------------------------------------
 
@@ -62,7 +69,14 @@ CREATE TABLE IF NOT EXISTS `airlines` (
   PRIMARY KEY (`airline_id`),
   UNIQUE KEY `airline_code` (`airline_code`),
   KEY `idx_airlines_code` (`airline_code`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `airlines`
+--
+
+INSERT INTO `airlines` (`airline_id`, `airline_code`, `airline_name`, `country`, `contact_info`, `website`, `is_active`, `created_at`) VALUES
+(1, 'NS', 'NextStop Air', 'USA', NULL, NULL, 1, '2025-09-23 09:22:04');
 
 -- --------------------------------------------------------
 
@@ -86,7 +100,15 @@ CREATE TABLE IF NOT EXISTS `airports` (
   UNIQUE KEY `airport_code` (`airport_code`),
   KEY `idx_airports_code` (`airport_code`),
   KEY `idx_airports_city` (`city`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `airports`
+--
+
+INSERT INTO `airports` (`airport_id`, `airport_code`, `airport_name`, `city`, `country`, `timezone`, `latitude`, `longitude`, `is_active`, `created_at`) VALUES
+(1, 'SFO', 'San Francisco Intl', 'San Francisco', 'USA', 'America/Los_Angeles', NULL, NULL, 1, '2025-09-23 09:22:04'),
+(2, 'LAX', 'Los Angeles Intl', 'Los Angeles', 'USA', 'America/Los_Angeles', NULL, NULL, 1, '2025-09-23 09:22:04');
 
 -- --------------------------------------------------------
 
@@ -115,7 +137,14 @@ CREATE TABLE IF NOT EXISTS `bookings` (
   KEY `idx_bookings_pnr` (`pnr`),
   KEY `idx_bookings_status` (`booking_status`),
   KEY `idx_bookings_date` (`booking_date`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `bookings`
+--
+
+INSERT INTO `bookings` (`booking_id`, `user_id`, `pnr`, `booking_status`, `total_passengers`, `total_amount`, `currency`, `booking_date`, `expiry_time`, `contact_email`, `contact_phone`, `created_at`, `updated_at`) VALUES
+(2, 1, 'ACA97A', 'CONFIRMED', 2, 200.00, 'USD', '2025-09-23 18:11:35', NULL, 'alice@example.com', '1234567890', '2025-09-23 18:11:35', '2025-09-23 18:11:35');
 
 -- --------------------------------------------------------
 
@@ -142,7 +171,14 @@ CREATE TABLE IF NOT EXISTS `cancellations` (
   KEY `idx_cancellations_requester` (`requested_by`),
   KEY `idx_cancellations_status` (`cancellation_status`),
   KEY `idx_cancellations_processed_by` (`processed_by`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `cancellations`
+--
+
+INSERT INTO `cancellations` (`cancellation_id`, `ticket_id`, `requested_by`, `cancellation_reason`, `cancellation_status`, `cancellation_fee`, `refund_eligible_amount`, `processed_by`, `admin_notes`, `processed_at`, `created_at`, `updated_at`) VALUES
+(3, 3, 1, 'Change of plans', 'PENDING', 0.00, NULL, NULL, NULL, NULL, '2025-09-23 19:06:48', '2025-09-23 19:06:48');
 
 -- --------------------------------------------------------
 
@@ -168,7 +204,14 @@ CREATE TABLE IF NOT EXISTS `fares` (
   KEY `idx_fares_schedule` (`schedule_id`),
   KEY `idx_fares_class` (`class_id`),
   KEY `idx_fares_valid_dates` (`valid_from`,`valid_until`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `fares`
+--
+
+INSERT INTO `fares` (`fare_id`, `schedule_id`, `class_id`, `base_price`, `tax_amount`, `currency`, `valid_from`, `valid_until`, `is_active`, `created_at`) VALUES
+(1, 1, 1, 120.00, 20.00, 'USD', '2025-09-01', '2025-12-31', 1, '2025-09-23 19:25:04');
 
 -- --------------------------------------------------------
 
@@ -195,7 +238,14 @@ CREATE TABLE IF NOT EXISTS `flight_instances` (
   KEY `idx_instances_date` (`flight_date`),
   KEY `idx_instances_schedule_date` (`schedule_id`,`flight_date`),
   KEY `idx_instances_status` (`status`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `flight_instances`
+--
+
+INSERT INTO `flight_instances` (`instance_id`, `schedule_id`, `flight_date`, `actual_departure`, `actual_arrival`, `status`, `gate_number`, `delay_minutes`, `cancellation_reason`, `created_at`, `updated_at`) VALUES
+(1, 1, '2025-09-23', NULL, NULL, 'SCHEDULED', NULL, 0, NULL, '2025-09-23 09:33:43', '2025-09-23 09:33:43');
 
 -- --------------------------------------------------------
 
@@ -217,6 +267,13 @@ CREATE TABLE IF NOT EXISTS `flight_routes` (
   KEY `idx_routes_destination` (`destination_airport_id`),
   KEY `idx_routes_source_dest` (`source_airport_id`,`destination_airport_id`)
 ) ;
+
+--
+-- Dumping data for table `flight_routes`
+--
+
+INSERT INTO `flight_routes` (`route_id`, `source_airport_id`, `destination_airport_id`, `distance_km`, `estimated_duration_minutes`, `is_active`, `created_at`) VALUES
+(1, 1, 2, 543.00, 80, 1, '2025-09-23 09:22:04');
 
 -- --------------------------------------------------------
 
@@ -245,7 +302,14 @@ CREATE TABLE IF NOT EXISTS `flight_schedules` (
   KEY `idx_schedules_aircraft` (`aircraft_id`),
   KEY `idx_schedules_flight_number` (`flight_number`),
   KEY `idx_schedules_valid_dates` (`valid_from`,`valid_until`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `flight_schedules`
+--
+
+INSERT INTO `flight_schedules` (`schedule_id`, `airline_id`, `route_id`, `aircraft_id`, `flight_number`, `departure_time`, `arrival_time`, `frequency`, `valid_from`, `valid_until`, `is_active`, `created_at`) VALUES
+(2, 1, 1, 1, 'NS101', '08:00:00', '09:20:00', 'DAILY', '2025-09-22', '2025-10-31', 1, '2025-09-24 06:56:20');
 
 -- --------------------------------------------------------
 
@@ -268,7 +332,15 @@ CREATE TABLE IF NOT EXISTS `passengers` (
   PRIMARY KEY (`passenger_id`),
   UNIQUE KEY `passport_number` (`passport_number`),
   KEY `idx_passengers_passport` (`passport_number`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `passengers`
+--
+
+INSERT INTO `passengers` (`passenger_id`, `first_name`, `last_name`, `passport_number`, `date_of_birth`, `gender`, `nationality`, `email`, `phone`, `created_at`) VALUES
+(4, 'Bob', 'Smith', NULL, '1988-02-02', 'Male', 'US', NULL, NULL, '2025-09-23 18:11:35'),
+(3, 'Alice', 'Doe', NULL, '1990-01-01', 'Female', 'US', NULL, NULL, '2025-09-23 18:11:35');
 
 -- --------------------------------------------------------
 
@@ -297,7 +369,14 @@ CREATE TABLE IF NOT EXISTS `payments` (
   KEY `idx_payments_status` (`payment_status`),
   KEY `idx_payments_transaction` (`transaction_id`),
   KEY `idx_payments_date` (`payment_date`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `payments`
+--
+
+INSERT INTO `payments` (`payment_id`, `booking_id`, `amount`, `currency`, `payment_method`, `payment_status`, `transaction_id`, `payment_gateway`, `gateway_response`, `failure_reason`, `payment_date`, `created_at`, `updated_at`) VALUES
+(2, 2, 200.00, 'USD', 'CREDIT_CARD', 'COMPLETED', 'TXN-12345', 'MockPay', NULL, NULL, '2025-09-24 00:36:00', '2025-09-23 19:06:00', '2025-09-23 19:06:00');
 
 -- --------------------------------------------------------
 
@@ -327,7 +406,14 @@ CREATE TABLE IF NOT EXISTS `refunds` (
   KEY `idx_refunds_status` (`refund_status`),
   KEY `idx_refunds_processed_by` (`processed_by`),
   KEY `idx_refunds_transaction` (`refund_transaction_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `refunds`
+--
+
+INSERT INTO `refunds` (`refund_id`, `cancellation_id`, `payment_id`, `refund_amount`, `refund_method`, `refund_status`, `refund_transaction_id`, `gateway_response`, `processed_by`, `processing_fee`, `processed_at`, `created_at`, `updated_at`) VALUES
+(3, 3, 2, 50.00, 'ORIGINAL_PAYMENT_METHOD', 'COMPLETED', NULL, NULL, 1, 0.00, '2025-09-24 00:37:11', '2025-09-23 19:07:11', '2025-09-23 19:07:11');
 
 -- --------------------------------------------------------
 
@@ -355,7 +441,19 @@ CREATE TABLE IF NOT EXISTS `seats` (
   KEY `idx_seats_class` (`class_id`),
   KEY `idx_seats_number` (`seat_number`),
   KEY `idx_seats_row` (`seat_row`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `seats`
+--
+
+INSERT INTO `seats` (`seat_id`, `aircraft_id`, `class_id`, `seat_number`, `seat_row`, `seat_column`, `is_window`, `is_aisle`, `is_middle`, `is_emergency_exit`, `is_active`, `created_at`) VALUES
+(1, 1, 1, '1A', 1, 'A', 1, 0, 0, 0, 1, '2025-09-23 09:22:04'),
+(2, 1, 1, '1B', 1, 'B', 0, 0, 1, 0, 1, '2025-09-23 09:22:04'),
+(3, 1, 1, '1C', 1, 'C', 0, 1, 0, 0, 1, '2025-09-23 09:22:04'),
+(4, 1, 1, '2A', 2, 'A', 1, 0, 0, 0, 1, '2025-09-23 09:22:04'),
+(5, 1, 1, '2B', 2, 'B', 0, 0, 1, 0, 1, '2025-09-23 09:22:04'),
+(6, 1, 1, '2C', 2, 'C', 0, 1, 0, 0, 1, '2025-09-23 09:22:04');
 
 -- --------------------------------------------------------
 
@@ -412,16 +510,26 @@ CREATE TABLE IF NOT EXISTS `tickets` (
   `issued_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `active_instance_id` int GENERATED ALWAYS AS ((case when (`ticket_status` <> _utf8mb4'CANCELLED') then `instance_id` else NULL end)) STORED,
   PRIMARY KEY (`ticket_id`),
   UNIQUE KEY `ticket_number` (`ticket_number`),
-  UNIQUE KEY `unique_seat_booking` (`instance_id`,`seat_id`),
+  UNIQUE KEY `unique_active_seat_booking` (`active_instance_id`,`seat_id`),
   KEY `idx_tickets_booking` (`booking_id`),
   KEY `idx_tickets_passenger` (`passenger_id`),
   KEY `idx_tickets_instance` (`instance_id`),
   KEY `idx_tickets_seat` (`seat_id`),
   KEY `idx_tickets_number` (`ticket_number`),
-  KEY `idx_tickets_status` (`ticket_status`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  KEY `idx_tickets_status` (`ticket_status`),
+  KEY `idx_tickets_active_instance` (`active_instance_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `tickets`
+--
+
+INSERT INTO `tickets` (`ticket_id`, `booking_id`, `passenger_id`, `instance_id`, `seat_id`, `ticket_number`, `ticket_status`, `fare_amount`, `tax_amount`, `baggage_allowance_kg`, `check_in_time`, `boarding_time`, `issued_at`, `created_at`, `updated_at`) VALUES
+(3, 2, 3, 1, 3, 'ACA97A-1', 'CANCELLED', 100.00, 0.00, NULL, NULL, NULL, '2025-09-23 18:11:35', '2025-09-23 18:11:35', '2025-09-23 19:06:48'),
+(4, 2, 4, 1, 5, 'ACA97A-2', 'CONFIRMED', 100.00, 0.00, NULL, NULL, NULL, '2025-09-23 18:11:35', '2025-09-23 18:11:35', '2025-09-23 18:11:35');
 
 -- --------------------------------------------------------
 
@@ -445,7 +553,15 @@ CREATE TABLE IF NOT EXISTS `users` (
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `email` (`email`),
   KEY `idx_users_email` (`email`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`user_id`, `email`, `password_hash`, `first_name`, `last_name`, `phone`, `date_of_birth`, `gender`, `nationality`, `created_at`, `updated_at`) VALUES
+(1, 'alice@example.com', '$2b$10$91R0miY2u/8NpRo5f5Ex5eRtJHw5CJUDIJ4KU0Jw857zuWhYi8uS6', 'Alice', 'Doe', '1234567890', '1990-01-01', 'Female', 'US', '2025-09-23 06:58:09', '2025-09-23 06:58:09'),
+(2, 'admin@nextstop.com', '$2b$10$LCmeYGxxqxmJ8KzT.xGY9efsZ4m6plVOz/65wb1naYBBvAqfASn9q', 'Admin', 'User', '1234567890', '1990-01-01', 'Male', 'US', '2025-09-24 06:53:45', '2025-09-24 06:53:45');
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
