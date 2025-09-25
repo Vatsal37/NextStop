@@ -22,12 +22,12 @@ app.use(express.static("public"))
 app.use(cookieParser())
 
 // Routes
-app.use('/api/auth', authRouter)
-app.use('/api/flights', flightRouter)
-app.use('/api/bookings', bookingRouter)
-app.use('/api/payments', paymentRouter)
-app.use('/api/refunds', refundRouter)
-app.use('/api/cancellations', cancellationRouter)
+app.use('/api/v1/auth', authRouter)
+app.use('/api/v1/flights', flightRouter)
+app.use('/api/v1/bookings', bookingRouter)
+app.use('/api/v1/payments', paymentRouter)
+app.use('/api/v1/refunds', refundRouter)
+app.use('/api/v1/cancellations', cancellationRouter)
 
 // Error handler
 app.use(errorHandler)

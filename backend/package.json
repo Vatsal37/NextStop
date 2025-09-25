@@ -7,7 +7,9 @@
   "type": "module",
   "main": "server.js",
   "scripts": {
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "seed": "node src/scripts/seed.js",
+    "seed:update-weekly": "node src/scripts/update_schedules_weekly.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
