@@ -1,50 +1,19 @@
 import React, { useRef, useEffect } from 'react';
 import { ArrowRight } from 'lucide-react';
+import { AirIndia, BritishAirlines, Empirates, Indigo, QatarAirways, SingaporeAirlines, TurkishAirlines, Vistara } from '../assets/images';
 
 const AirlinesCarousel = () => {
   const swiperRef = useRef(null);
 
   const airlines = [
-    {
-      id: 1,
-      name: 'AMERICAN AIRLINES',
-      image: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800&q=80'
-    },
-    {
-      id: 2,
-      name: 'TURKISH AIRLINES',
-      image: 'https://images.unsplash.com/photo-1474302770737-173ee21bab63?w=800&q=80'
-    },
-    {
-      id: 3,
-      name: 'EMIRATES',
-      image: 'https://images.unsplash.com/photo-1540962351504-03099e0a754b?w=800&q=80'
-    },
-    {
-      id: 4,
-      name: 'QATAR AIRWAYS',
-      image: 'https://images.unsplash.com/photo-1464037866556-6812c9d1c72e?w=800&q=80'
-    },
-    {
-      id: 5,
-      name: 'LUFTHANSA',
-      image: 'https://images.unsplash.com/photo-1583994009782-a7b9208172ce?w=800&q=80'
-    },
-    {
-      id: 6,
-      name: 'AIR FRANCE',
-      image: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800&q=80'
-    },
-    {
-      id: 7,
-      name: 'BRITISH AIRWAYS',
-      image: 'https://images.unsplash.com/photo-1583994009782-a7b9208172ce?w=800&q=80'
-    },
-    {
-      id: 8,
-      name: 'SINGAPORE AIRLINES',
-      image: 'https://images.unsplash.com/photo-1474302770737-173ee21bab63?w=800&q=80'
-    }
+    { id: 1, name: 'AIR INDIA', image: AirIndia },
+    { id: 2, name: 'BRITISH AIRWAYS', image: BritishAirlines },
+    { id: 3, name: 'EMIRATES', image: Empirates },
+    { id: 4, name: 'INDIGO', image: Indigo },
+    { id: 5, name: 'QATAR AIRWAYS', image: QatarAirways },
+    { id: 6, name: 'SINGAPORE AIRLINES', image: SingaporeAirlines },
+    { id: 7, name: 'TURKISH AIRLINES', image: TurkishAirlines },
+    { id: 8, name: 'VISTARA', image: Vistara },
   ];
 
   useEffect(() => {
@@ -108,12 +77,15 @@ const AirlinesCarousel = () => {
             <div className="swiper-wrapper">
               {airlines.map((airline) => (
                 <div key={airline.id} className="swiper-slide">
-                  <div className="relative w-full max-w-sm mx-auto h-80 overflow-hidden group cursor-pointer transition-all duration-300 rounded-3xl shadow-lg swiper-slide-active:shadow-2xl" style={{ borderRadius: '1.5rem' }}>
+                  <div className="relative w-full max-w-sm mx-auto h-80 overflow-hidden group cursor-pointer transition-all duration-300 rounded-3xl shadow-lg swiper-slide-active:shadow-2xl will-change-transform" style={{ borderRadius: '1.5rem' }}>
                     {/* Background Image */}
                     <img
                       src={airline.image}
                       alt={airline.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover will-change-transform"
+                      loading="lazy"
+                      decoding="async"
+                      fetchpriority="low"
                     />
                     
                     {/* Bottom Section with Airline Name and Arrow */}
