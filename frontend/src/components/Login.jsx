@@ -2,9 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { Eye, EyeOff } from 'lucide-react';
 import { loginCover, logo, loginBGImage } from '../assets/images/index.js';
+import Toast from './ui/Toast.jsx';
+import { useDispatch, useSelector } from 'react-redux';
+import { loginThunk } from '../store/index.js';
 
 function Login() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -12,9 +16,25 @@ function Login() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const closeTimeoutRef = useRef(null);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastCode, setToastCode] = useState(0);
+  const auth = useSelector((s) => s.auth);
 
-  const handleSubmit = () => {
-    console.log('Login attempted', { email, password, rememberMe });
+  const handleSubmit = async () => {
+    if (!email || !password) {
+      setToastMessage('Please enter email and password');
+      setToastCode(400);
+      return;
+    }
+    const action = await dispatch(loginThunk({ email, password }));
+    if (loginThunk.fulfilled.match(action)) {
+      setToastMessage('Login successful');
+      setToastCode(200);
+      setTimeout(() => navigate('/'), 800);
+    } else {
+      setToastMessage(action.payload || 'Invalid credentials');
+      setToastCode(401);
+    }
   };
 
   useEffect(() => {
@@ -45,6 +65,7 @@ function Login() {
   return (
     <div className="h-screen flex items-center justify-center p-8 md:p-12 lg:p-16 relative overflow-hidden" onClick={handleBackdropClick}>
       {/* Background with ocean/water texture effect */}
+
       <div 
         className="absolute inset-0 bg-cover bg-center"
         style={{
@@ -249,6 +270,7 @@ function Login() {
           </div>
         </div>
       </div>
+      <Toast message={toastMessage} code={toastCode} />
     </div>
   );
 }

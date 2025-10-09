@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router";
 import { Search, Menu, X } from "lucide-react";
 import logo from '../assets/images/logo.png';
+import { useDispatch, useSelector } from 'react-redux';
+import { logout } from '../store/index.js';
+import LogoutModal from './LogoutModel.jsx';
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -11,6 +14,9 @@ function Header() {
   const location = useLocation();
   const navRef = useRef(null);
   const indicatorRef = useRef(null);
+  const isLoggedIn = useSelector((s) => Boolean(s?.auth?.token));
+  const [isLogoutOpen, setIsLogoutOpen] = useState(false);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     setActivePath(location.pathname);
@@ -52,14 +58,14 @@ function Header() {
   const isActive = (path) => activePath === path;
 
   return (
-    <header className={`fixed top-0 z-50 w-full transition-all duration-300 ${scrolled ? "bg-gray-100/95 backdrop-blur-md shadow-md border-b border-gray-200" : "bg-transparent"}`}>
+    <header className={`static top-0 z-50 w-full transition-all duration-300 ${scrolled ? "bg-gray-100/95 backdrop-blur-md shadow-md border-b border-gray-200" : "bg-transparent"}`}>
       <div className="container flex h-16 items-center justify-around">
         <div className="flex items-center gap-2">
           <a href="/" onClick={handlePageClick('/')} className="flex items-center gap-2">
             <div className="relative w-10 h-10">
               <img src={logo} alt="NextStop Logo" className="object-contain w-10 h-10" />
             </div>
-            <span className="hidden font-bold sm:inline-block gradient-text text-lg">
+            <span className="hidden font-bold sm:inline-block gradient-text text-2xl">
               NextStop
             </span>
           </a>
@@ -90,12 +96,22 @@ function Header() {
         <div className="flex items-center gap-2">
           {/* Desktop Login Button */}
           <div className="hidden md:block">
-            <button 
-              onClick={handlePageClick('/login')}
-              className="bg-gradient-to-l from-indigo-600 to-white hover:from-indigo-800 hover:to-white text-white px-4 py-2 rounded-4xl cursor-pointer transition-all duration-200"
-            >
-              Login
-            </button>
+            {isLoggedIn ? (
+              <button 
+                type="button"
+                onClick={() => setIsLogoutOpen(true)}
+                className="bg-gradient-to-l from-indigo-600 to-indigo-100 border-l border-l-gray-300 hover:from-indigo-800 hover:to-indigo-100 text-white px-4 py-2 rounded-4xl cursor-pointer transition-all duration-200"
+              >
+                Logout
+              </button>
+            ) : (
+              <button 
+                onClick={handlePageClick('/login')}
+                className="bg-gradient-to-l from-indigo-600 to-indigo-100 border-l border-l-gray-400 hover:from-indigo-800 hover:to-indigo-100 text-white px-4 py-2 rounded-4xl cursor-pointer transition-all duration-200"
+              >
+                Login
+              </button>
+            )}
           </div>
 
           <button className="md:hidden text-gray-600 p-2" onClick={() => setIsMenuOpen(!isMenuOpen)}>
@@ -111,16 +127,36 @@ function Header() {
             <a href="/" onClick={handlePageClick('/')} className="text-sm font-medium text-gray-700">Home</a>
             <a href="/support" onClick={handlePageClick('/support')} className="text-sm font-medium text-gray-700">Support</a>
 
-            {/* Mobile Login Button */}
-            <button 
-              onClick={handlePageClick('/login')}
-              className="w-full bg-gradient-to-r from-purple-600 to-indigo-500 text-white px-4 py-2 rounded-md hover:from-purple-700 hover:to-indigo-600 transition-all duration-200"
-            >
-              Login
-            </button>
+            {/* Mobile Auth Button */}
+            {isLoggedIn ? (
+              <button 
+                type="button"
+                onClick={() => setIsLogoutOpen(true)}
+                className="w-full bg-gradient-to-r from-purple-600 to-indigo-500 text-white px-4 py-2 rounded-md hover:from-purple-700 hover:to-indigo-600 transition-all duration-200"
+              >
+                Logout
+              </button>
+            ) : (
+              <button 
+                onClick={handlePageClick('/login')}
+                className="w-full bg-gradient-to-r from-purple-600 to-indigo-500 text-white px-4 py-2 rounded-md hover:from-purple-700 hover:to-indigo-600 transition-all duration-200"
+              >
+                Login
+              </button>
+            )}
           </nav>
         </div>
       )}
+      <LogoutModal
+        isOpen={isLogoutOpen}
+        onClose={() => setIsLogoutOpen(false)}
+        onConfirm={() => {
+          dispatch(logout());
+          setIsLogoutOpen(false);
+          setIsMenuOpen(false);
+          navigate('/');
+        }}
+      />
     </header>
   );
 }

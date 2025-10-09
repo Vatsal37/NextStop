@@ -5,6 +5,11 @@ import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    proxy: {
+      '/api': 'http://localhost:5000',
+    }
+  },
   plugins: [tailwindcss(), react()],
   resolve: {
     alias: {
