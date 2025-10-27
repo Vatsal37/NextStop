@@ -9,6 +9,7 @@ import bookingRouter from './routes/booking.route.js';
 import paymentRouter from './routes/payment.route.js';
 import refundRouter from './routes/refund.route.js';
 import cancellationRouter from './routes/cancellation.route.js';
+import airportsRouter from './routes/airports.route.js';
 import errorHandler from './middlewares/error.middleware.js';
 
 const app = express();
@@ -28,6 +29,7 @@ app.use('/api/v1/bookings', bookingRouter)
 app.use('/api/v1/payments', paymentRouter)
 app.use('/api/v1/refunds', refundRouter)
 app.use('/api/v1/cancellations', cancellationRouter)
+app.use('/api/v1/airports', airportsRouter)
 
 // Error handler
 app.use(errorHandler)

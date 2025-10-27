@@ -100,9 +100,30 @@ async function seed() {
 			);
 		}
 
-		// Fetch aircraft ids
-		const [aircraftRows] = await conn.query(`SELECT aircraft_id, airline_id FROM aircraft`);
-		const [routeRows] = await conn.query(`SELECT route_id FROM flight_routes`);
+	// Seat Classes (must be seeded before seats)
+	const SEAT_CLASSES = [
+		{ name: 'Economy', code: 'Y', baggage: 20, meal: 0, priority: 0, pitch: 30, legroom: 0 },
+		{ name: 'Premium Economy', code: 'W', baggage: 25, meal: 1, priority: 0, pitch: 34, legroom: 1 },
+		{ name: 'Business', code: 'J', baggage: 35, meal: 1, priority: 1, pitch: 42, legroom: 1 },
+		{ name: 'First Class', code: 'F', baggage: 50, meal: 1, priority: 1, pitch: 60, legroom: 1 }
+	];
+	
+	// Check if seat_classes already exist
+	const [classExists] = await conn.query(`SELECT COUNT(*) as c FROM seat_classes`);
+	if (classExists[0].c === 0) {
+		for (const sc of SEAT_CLASSES) {
+			await conn.execute(
+				`INSERT INTO seat_classes (class_name, class_code, baggage_allowance_kg, meal_service, priority_boarding, seat_pitch_inches, extra_legroom, created_at)
+				 VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+				[sc.name, sc.code, sc.baggage, sc.meal, sc.priority, sc.pitch, sc.legroom]
+			);
+		}
+		console.log('Seat classes seeded');
+	}
+
+	// Fetch aircraft ids
+	const [aircraftRows] = await conn.query(`SELECT aircraft_id, airline_id FROM aircraft`);
+	const [routeRows] = await conn.query(`SELECT route_id FROM flight_routes`);
 
 		// Schedules: mix of DAILY and specific weekdays per airline across routes
 		const today = new Date();
@@ -144,10 +165,19 @@ async function seed() {
 		const [seatExists] = await conn.query(`SELECT COUNT(*) as c FROM seats`);
 		if (seatExists[0].c === 0) {
 			for (const ac of aircraftRows) {
-				// Simple 30 rows × 6 columns (A-F), class_id 1 for rows 1-25, class_id 3 for rows 26-30 (Business)
+				// 30 rows × 6 columns (A-F) with different classes:
+				// First Class: rows 1-2 (class_id 4)
+				// Business: rows 3-5 (class_id 3)
+				// Premium Economy: rows 6-8 (class_id 2)
+				// Economy: rows 9-30 (class_id 1)
 				for (let row=1; row<=30; row++) {
 					for (const col of ['A','B','C','D','E','F']) {
-						const classId = row <= 25 ? 1 : 3; // Economy / Business ids from seat_classes seed
+						let classId;
+						if (row <= 2) classId = 4; // First Class
+						else if (row <= 5) classId = 3; // Business
+						else if (row <= 8) classId = 2; // Premium Economy
+						else classId = 1; // Economy
+						
 						await conn.execute(
 							`INSERT INTO seats (aircraft_id, class_id, seat_number, seat_row, seat_column, is_window, is_aisle, is_middle, is_active)
 							 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
@@ -167,22 +197,44 @@ async function seed() {
 			}
 		}
 
-		// Fares: per schedule for Economy (class 1) and Business (class 3)
+		// Fares: per schedule for all seat classes
 		const [schedules] = await conn.query(`SELECT schedule_id FROM flight_schedules`);
 		for (const s of schedules) {
 			const baseEco = randomInt(2500, 6500);
-			const baseBiz = baseEco * 2;
+			const basePrem = baseEco * 1.5;
+			const baseBiz = baseEco * 2.5;
+			const baseFirst = baseEco * 4;
+			
+			// Economy (class_id 1)
 			await conn.execute(
 				`INSERT INTO fares (schedule_id, class_id, base_price, tax_amount, currency, valid_from, valid_until, is_active)
 				 VALUES (?, 1, ?, 400.00, 'INR', ?, ?, 1)
 				 ON DUPLICATE KEY UPDATE base_price=VALUES(base_price), tax_amount=VALUES(tax_amount), is_active=1`,
 				[s.schedule_id, baseEco, toISO(today), toISO(sixMonthsLater)]
 			);
+			
+			// Premium Economy (class_id 2)
+			await conn.execute(
+				`INSERT INTO fares (schedule_id, class_id, base_price, tax_amount, currency, valid_from, valid_until, is_active)
+				 VALUES (?, 2, ?, 500.00, 'INR', ?, ?, 1)
+				 ON DUPLICATE KEY UPDATE base_price=VALUES(base_price), tax_amount=VALUES(tax_amount), is_active=1`,
+				[s.schedule_id, basePrem, toISO(today), toISO(sixMonthsLater)]
+			);
+			
+			// Business (class_id 3)
 			await conn.execute(
 				`INSERT INTO fares (schedule_id, class_id, base_price, tax_amount, currency, valid_from, valid_until, is_active)
 				 VALUES (?, 3, ?, 800.00, 'INR', ?, ?, 1)
 				 ON DUPLICATE KEY UPDATE base_price=VALUES(base_price), tax_amount=VALUES(tax_amount), is_active=1`,
 				[s.schedule_id, baseBiz, toISO(today), toISO(sixMonthsLater)]
+			);
+			
+			// First Class (class_id 4)
+			await conn.execute(
+				`INSERT INTO fares (schedule_id, class_id, base_price, tax_amount, currency, valid_from, valid_until, is_active)
+				 VALUES (?, 4, ?, 1200.00, 'INR', ?, ?, 1)
+				 ON DUPLICATE KEY UPDATE base_price=VALUES(base_price), tax_amount=VALUES(tax_amount), is_active=1`,
+				[s.schedule_id, baseFirst, toISO(today), toISO(sixMonthsLater)]
 			);
 		}
 

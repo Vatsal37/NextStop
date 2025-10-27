@@ -1,4 +1,7 @@
 import dotenv from 'dotenv';
+import http from 'http';
+import { Server as SocketIOServer } from 'socket.io';
+import { setIO } from './utils/realtime.js';
 
 dotenv.config({ path: './.env' });
 
@@ -8,7 +11,11 @@ const { default: connectDB } = await import('./db/db.js');
 connectDB()
     .then(() => {
         const port = process.env.PORT || 5000;
-        app.listen(port, () => {
+        const server = http.createServer(app);
+        const io = new SocketIOServer(server, { cors: { origin: '*', methods: ['GET', 'POST'] } });
+        setIO(io);
+        io.on('connection', () => {});
+        server.listen(port, () => {
             console.log(`Server is running on port ${port}`);
         })
     })

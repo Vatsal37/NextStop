@@ -44,22 +44,66 @@ export const createFlightSchedule = async ({ airlineId, routeId, aircraftId, fli
     }
 };
 
-export const searchFlights = async ({ sourceCode, destinationCode, date, page = 1, limit = 20 }) => {
+export const searchFlights = async ({ sourceCode, destinationCode, date, page = 1, limit = 20, classId = 1 }) => {
 	// Find route via airport codes, then schedules valid for date and frequency
     const pageInt = Math.max(1, parseInt(page, 10) || 1);
     const limitInt = Math.max(1, Math.min(100, parseInt(limit, 10) || 20));
     const offsetInt = (pageInt - 1) * limitInt;
-    const sql = `SELECT fs.*, fr.route_id, sa.airport_code AS source_code, da.airport_code AS destination_code, a.airline_name
+    
+    // Get seat class info
+    const classIdNum = parseInt(classId, 10);
+    
+    // Convert date to day of week for frequency matching
+    const dateObj = new Date(date);
+    const dayOfWeek = dateObj.getDay(); // 0=Sunday, 1=Monday, etc.
+    
+    // Map JavaScript day to day name patterns
+    const dayNameMapping = {
+      0: 'SUN', // Sunday
+      1: 'MON', // Monday
+      2: 'TUE', // Tuesday
+      3: 'WED', // Wednesday
+      4: 'THU', // Thursday
+      5: 'FRI', // Friday
+      6: 'SAT'  // Saturday
+    };
+    
+    const dayName = dayNameMapping[dayOfWeek];
+    
+    const sql = `SELECT fs.*, fr.route_id, 
+                sa.airport_code AS source_code, sa.city AS source_city,
+                da.airport_code AS destination_code, da.city AS destination_city,
+                a.airline_name, ac.aircraft_model AS aircraft_type,
+                f.base_price, f.tax_amount, f.total_price, f.currency,
+                sc.class_name, sc.class_code
          FROM flight_schedules fs
          JOIN flight_routes fr ON fs.route_id = fr.route_id
          JOIN airports sa ON fr.source_airport_id = sa.airport_id
          JOIN airports da ON fr.destination_airport_id = da.airport_id
          JOIN airlines a ON a.airline_id = fs.airline_id
+         JOIN aircraft ac ON ac.aircraft_id = fs.aircraft_id
+         LEFT JOIN fares f ON fs.schedule_id = f.schedule_id 
+           AND f.class_id = ? AND ? BETWEEN f.valid_from AND f.valid_until AND f.is_active = 1
+         LEFT JOIN seat_classes sc ON sc.class_id = ?
          WHERE sa.airport_code = ? AND da.airport_code = ?
            AND ? BETWEEN fs.valid_from AND fs.valid_until
            AND fs.is_active = 1
+           AND (
+             fs.frequency = 'DAILY'
+             OR fs.frequency LIKE ?
+             OR fs.frequency LIKE ?
+           )
          LIMIT ${limitInt} OFFSET ${offsetInt}`;
-    const [rows] = await pool.execute(sql, [sourceCode, destinationCode, date]);
+    
+    // Search patterns: 'WEEKLY_MON', 'WEEKLY_MON,WUE,FRI', etc.
+    const pattern1 = `WEEKLY_${dayName}`;
+    const pattern2 = `%${dayName}%`;
+    
+    const [rows] = await pool.execute(sql, [
+      classIdNum, date, classIdNum, 
+      sourceCode, destinationCode, date,
+      pattern1, pattern2
+    ]);
 	return rows;
 };
 

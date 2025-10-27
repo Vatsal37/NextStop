@@ -82,6 +82,14 @@ function Header() {
           </a>
 
           <a
+            href="/search"
+            onClick={handlePageClick('/search')}
+            className={`text-sm font-medium hover:text-primary ${isActive('/search') ? 'text-blue-700' : 'text-gray-700'}`}
+          >
+            Search Flights
+          </a>
+
+          <a
             href="/support"
             onClick={handlePageClick('/support')}
             className={`text-sm font-medium hover:text-primary ${isActive('/support') ? 'text-blue-700' : 'text-gray-700'}`}
@@ -125,6 +133,7 @@ function Header() {
         <div className="md:hidden bg-gray-100 border-t border-gray-200 shadow-lg">
           <nav className="flex flex-col space-y-4 p-4">
             <a href="/" onClick={handlePageClick('/')} className="text-sm font-medium text-gray-700">Home</a>
+            <a href="/search" onClick={handlePageClick('/search')} className="text-sm font-medium text-gray-700">Search Flights</a>
             <a href="/support" onClick={handlePageClick('/support')} className="text-sm font-medium text-gray-700">Support</a>
 
             {/* Mobile Auth Button */}

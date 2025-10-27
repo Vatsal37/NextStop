@@ -1,18 +1,25 @@
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router'
+import { useDispatch } from 'react-redux'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DatePicker } from '@/components/ui/date-picker'
-import { ArrowRightLeft, Search, Plane, MapPin, Calendar, Sparkles } from 'lucide-react'
+import { ArrowRightLeft, Search, Plane, MapPin, Calendar, Sparkles, Users } from 'lucide-react'
 import { searchCoverImage, searchCoverClouds, searchCoverPlane } from '@/assets/images'
+import airportsData from '@/data/airports.json'
+import { setSearchData } from '../store/index.js'
 
 function SearchSection() {
-  const [searchData, setSearchData] = useState({
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
+  const [searchData, setLocalSearchData] = useState({
     from: '',
     to: '',
-    departureDate: null
+    departureDate: null,
+    seatClass: '1' // Default to Economy
   })
 
   const handleInputChange = (name, value) => {
-    setSearchData(prev => ({
+    setLocalSearchData(prev => ({
       ...prev,
       [name]: value
     }))
@@ -20,29 +27,47 @@ function SearchSection() {
 
   const handleSearch = (e) => {
     e.preventDefault()
-    console.log('Search data:', searchData)
-    // TODO: Implement search functionality
+    
+    // Check if required fields are filled
+    if (!searchData.from || !searchData.to || !searchData.departureDate) {
+      alert('Please fill in all required fields (From, To, and Departure Date)')
+      return
+    }
+    
+    // Dispatch search data to Redux store
+    dispatch(setSearchData(searchData))
+    
+    // Navigate to search page
+    navigate('/search')
   }
 
   const swapLocations = () => {
-    setSearchData(prev => ({
+    setLocalSearchData(prev => ({
       ...prev,
       from: prev.to,
       to: prev.from
     }))
   }
 
-  // Sample airport data
-  const airports = [
-    { value: 'tokyo', label: 'Tokyo, Japan', code: 'NRT' },
-    { value: 'berlin', label: 'Berlin, Germany', code: 'BER' },
-    { value: 'london', label: 'London, UK', code: 'LHR' },
-    { value: 'paris', label: 'Paris, France', code: 'CDG' },
-    { value: 'newyork', label: 'New York, USA', code: 'JFK' },
-    { value: 'dubai', label: 'Dubai, UAE', code: 'DXB' },
-    { value: 'singapore', label: 'Singapore', code: 'SIN' },
-    { value: 'sydney', label: 'Sydney, Australia', code: 'SYD' }
+  const [airports, setAirports] = useState([])
+
+  // Seat class options
+  const seatClasses = [
+    { value: '1', label: 'Economy', code: 'Y' },
+    { value: '2', label: 'Premium Economy', code: 'W' },
+    { value: '3', label: 'Business', code: 'J' },
+    { value: '4', label: 'First Class', code: 'F' }
   ]
+
+  useEffect(() => {
+    // Load airports from JSON file
+    const mapped = airportsData.map((a) => ({
+      value: a.airport_code,
+      label: `${a.city}, ${a.country}`,
+      code: a.airport_code
+    }))
+    setAirports(mapped)
+  }, [])
 
   return (
     <section className='relative h-screen px-4 md:px-6 py-8 md:py-12 overflow-hidden flex items-center'>
@@ -163,7 +188,7 @@ function SearchSection() {
                 </div>
 
                 {/* Departure Date */}
-                <div className='sm:col-span-2 group'>
+                <div className='group'>
                   <label className='flex items-center gap-1.5 text-md font-semibold text-gray-700 uppercase tracking-wide mb-1.5'>
                     <Calendar className='w-5 h-5 text-indigo-600' />
                     Departure Date
@@ -175,6 +200,29 @@ function SearchSection() {
                     className="w-full h-10 text-sm border-2 border-gray-200 hover:border-indigo-400 focus:border-indigo-600 rounded-xl transition-colors"
                     disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                   />
+                </div>
+
+                {/* Seat Class */}
+                <div className='group'>
+                  <label className='flex items-center gap-1.5 text-md font-semibold text-gray-700 uppercase tracking-wide mb-1.5'>
+                    <Users className='w-5 h-5 text-purple-600' />
+                    Class
+                  </label>
+                  <Select value={searchData.seatClass || '1'} onValueChange={(value) => handleInputChange('seatClass', value)}>
+                    <SelectTrigger className="w-full h-10 text-sm rounded-xl border-2 border-gray-200 hover:border-purple-400 focus:border-purple-600 transition-colors bg-white shadow-sm">
+                      <SelectValue placeholder="Select class" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {seatClasses.map((seatClass) => (
+                        <SelectItem key={seatClass.value} value={seatClass.value}>
+                          <div className='flex items-center justify-between gap-3'>
+                            <span>{seatClass.label}</span>
+                            <span className='text-xs text-gray-500 font-mono'>{seatClass.code}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Search Button */}

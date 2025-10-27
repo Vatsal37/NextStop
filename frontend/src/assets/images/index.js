@@ -19,6 +19,9 @@ import QatarAirways from './airlines/QatarAirways.webp'
 import SingaporeAirlines from './airlines/SingaporeAirlines.webp'
 import TurkishAirlines from './airlines/TurkishAirlines.webp'
 import Vistara from './airlines/Vistara.webp'
+import AirbusA320 from './aircraft/Airbus A320.png'
+import Boeing737 from './aircraft/Boeing 737-800.png'
+import routeIcon from './flightRouteIcon.png'
 
 export {
     logo,
@@ -42,4 +45,7 @@ export {
     SingaporeAirlines,
     TurkishAirlines,
     Vistara,
+    AirbusA320,
+    Boeing737,
+    routeIcon,
 }

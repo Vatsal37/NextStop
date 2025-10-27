@@ -34,3 +34,14 @@ export const authApi = {
 };
 
 
+export const airportsApi = {
+    list: (params) => api.get('/airports', { params }),
+};
+
+export const flightsApi = {
+    search: (params) => api.get('/flights/search', { params }),
+    getSeats: (id, params) => api.get(`/flights/${id}/seats`, { params }),
+    getStatus: (id, params) => api.get(`/flights/${id}/status`, { params }),
+};
+
+
