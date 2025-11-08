@@ -4,7 +4,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { loginCover, logo, loginBGImage } from '../assets/images/index.js';
 import Toast from './ui/Toast.jsx';
 import { useDispatch, useSelector } from 'react-redux';
-import { loginThunk } from '../store/index.js';
+import { loginThunk, fetchMeThunk } from '../store/index.js';
 
 function Login() {
   const navigate = useNavigate();
@@ -28,6 +28,8 @@ function Login() {
     }
     const action = await dispatch(loginThunk({ email, password }));
     if (loginThunk.fulfilled.match(action)) {
+      // Fetch complete user data after successful login
+      await dispatch(fetchMeThunk());
       setToastMessage('Login successful');
       setToastCode(200);
       setTimeout(() => navigate('/'), 800);
@@ -262,7 +264,10 @@ function Login() {
               {/* Sign Up Link */}
               <p className="text-center text-sm text-gray-600 mt-6">
                 Don't have an account?{' '}
-                <button className="font-semibold text-gray-900 hover:text-teal-600">
+                <button 
+                  onClick={() => navigate('/signup')}
+                  className="font-semibold text-gray-900 hover:text-teal-600 hover:underline"
+                >
                   Sign up
                 </button>
               </p>

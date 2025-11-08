@@ -22,6 +22,16 @@ import Vistara from './airlines/Vistara.webp'
 import AirbusA320 from './aircraft/Airbus A320.png'
 import Boeing737 from './aircraft/Boeing 737-800.png'
 import routeIcon from './flightRouteIcon.png'
+import signupBGImage from './signupBGImage.jpeg'
+import signupCover from './signupCoverImage.jpeg'
+import stripedBar from './striped-bar.png'
+import userProfileIcon from './profile/userProfileIcon.png'
+import maleProfileIcon from './profile/manProfileIcon.png'
+import femaleProfileIcon from './profile/womanProfileIcon.png'
+import profileCoverImage from './profileCoverImage.webp'
+import bookingConfirmationCoverImage from './bookingConfirmationCoverImage.webp'
+import bookedSeatIcon from './seat/bookedSeat.png'
+import availableSeatIcon from './seat/availableSeat.png'
 
 export {
     logo,
@@ -48,4 +58,14 @@ export {
     AirbusA320,
     Boeing737,
     routeIcon,
+    signupBGImage,
+    signupCover,
+    stripedBar,
+    userProfileIcon,
+    maleProfileIcon,
+    femaleProfileIcon,
+    profileCoverImage,
+    bookingConfirmationCoverImage,
+    bookedSeatIcon,
+    availableSeatIcon,
 }

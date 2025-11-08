@@ -5,7 +5,8 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const BACKEND_URL = process.env.VITE_API_URL || 'http://localhost:5000';
+const RAW_BACKEND_URL = process.env.VITE_API_URL || 'http://localhost:5000';
+const BACKEND_URL = RAW_BACKEND_URL.trim().replace(/\/+$/, '');
 const AIRPORTS_ENDPOINT = `${BACKEND_URL}/api/v1/airports`;
 const OUTPUT_FILE = path.join(__dirname, '../src/data/airports.json');
 

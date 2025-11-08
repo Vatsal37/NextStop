@@ -3,7 +3,7 @@ import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { signJwt } from '../utils/jwt.util.js';
-import { createUser, findUserByEmail } from '../models/user.model.js';
+import { createUser, findUserByEmail, findUserById, updateUserById } from '../models/user.model.js';
 
 export const register = asyncHandler(async (req, res) => {
 	const { email, password, firstName, lastName, phone, dateOfBirth, gender, nationality } = req.body;
@@ -34,6 +34,63 @@ export const login = asyncHandler(async (req, res) => {
 	}
 	const token = signJwt({ userId: user.user_id, email: user.email });
 	return res.json(new ApiResponse(200, { token }, 'Login successful'));
+});
+
+export const me = asyncHandler(async (req, res) => {
+    const userId = req?.user?.userId;
+    if (!userId) {
+        throw new ApiError(401, 'Unauthorized');
+    }
+    const user = await findUserById(userId);
+    if (!user) {
+        throw new ApiError(404, 'User not found');
+    }
+    
+    // date_of_birth is already formatted as YYYY-MM-DD string from the SQL query
+    // No additional formatting needed
+    
+    
+    return res.json(new ApiResponse(200, { user }, 'Current user'));
+});
+
+export const updateMe = asyncHandler(async (req, res) => {
+    const userId = req?.user?.userId;
+    if (!userId) {
+        throw new ApiError(401, 'Unauthorized');
+    }
+    const {
+        firstName,
+        lastName,
+        phone,
+        dateOfBirth, // expected 'YYYY-MM-DD'
+        gender,      // expected 'Male' | 'Female' | 'Other'
+        nationality  // expected two-letter code like 'US'
+    } = req.body || {};
+
+    // Basic normalization/sanitization
+    let normalizedGender = undefined;
+    if (typeof gender === 'string' && gender.trim()) {
+        const g = gender.trim().toLowerCase();
+        if (g.startsWith('m')) normalizedGender = 'Male';
+        else if (g.startsWith('f')) normalizedGender = 'Female';
+        else normalizedGender = 'Other';
+    }
+
+    let normalizedDob = undefined;
+    if (typeof dateOfBirth === 'string' && dateOfBirth.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        normalizedDob = dateOfBirth;
+    }
+
+    const updated = await updateUserById(userId, {
+        firstName,
+        lastName,
+        phone,
+        dateOfBirth: normalizedDob,
+        gender: normalizedGender !== undefined ? normalizedGender : undefined,
+        nationality,
+    });
+
+    return res.json(new ApiResponse(200, { user: updated }, 'Profile updated'));
 });
 
 

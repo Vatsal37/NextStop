@@ -16,6 +16,19 @@ export const loginThunk = createAsyncThunk(
 	}
 );
 
+export const fetchMeThunk = createAsyncThunk(
+	'auth/fetchMe',
+	async (_, { rejectWithValue }) => {
+		try {
+			const { data } = await authApi.me();
+			return data?.data?.user || null;
+		} catch (err) {
+			const message = err?.response?.data?.message || 'Failed to load user';
+			return rejectWithValue(message);
+		}
+	}
+);
+
 const authSlice = createSlice({
 	name: 'auth',
 	initialState: { token: null, user: null, status: 'idle', error: null },
@@ -36,11 +49,23 @@ const authSlice = createSlice({
 			.addCase(loginThunk.fulfilled, (state, action) => {
 				state.status = 'succeeded';
 				state.token = action.payload?.token || null;
-				state.user = action.payload?.user || null;
+				// Fetch fresh user data after login
+				// (fetchMeThunk will be dispatched separately in the component)
 			})
 			.addCase(loginThunk.rejected, (state, action) => {
 				state.status = 'failed';
 				state.error = action.payload || 'Login failed';
+			})
+			.addCase(fetchMeThunk.pending, (state) => {
+				state.status = 'loading';
+			})
+			.addCase(fetchMeThunk.fulfilled, (state, action) => {
+				state.status = 'succeeded';
+				state.user = action.payload;
+			})
+			.addCase(fetchMeThunk.rejected, (state, action) => {
+				state.status = 'failed';
+				state.error = action.payload || 'Failed to load user';
 			});
 	},
 });

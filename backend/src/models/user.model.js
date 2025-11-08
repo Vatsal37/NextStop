@@ -15,9 +15,35 @@ export const createUser = async ({ email, passwordHash, firstName, lastName, pho
 };
 
 export const findUserById = async (userId) => {
-	const [rows] = await pool.execute('SELECT user_id, email, first_name, last_name, phone FROM users WHERE user_id = ? LIMIT 1', [userId]);
+	// Use DATE_FORMAT to return date as string (YYYY-MM-DD) without time component
+	// This prevents timezone conversion issues
+	const [rows] = await pool.execute(
+		`SELECT user_id, email, first_name, last_name, phone, gender, 
+		 DATE_FORMAT(date_of_birth, '%Y-%m-%d') as date_of_birth, nationality 
+		 FROM users WHERE user_id = ? LIMIT 1`, 
+		[userId]
+	);
 	return rows[0] || null;
 };
+
+export const updateUserById = async (userId, { firstName, lastName, phone, dateOfBirth, gender, nationality }) => {
+    const fields = [];
+    const values = [];
+
+    if (firstName !== undefined) { fields.push('first_name = ?'); values.push(firstName); }
+    if (lastName !== undefined) { fields.push('last_name = ?'); values.push(lastName); }
+    if (phone !== undefined) { fields.push('phone = ?'); values.push(phone || null); }
+    if (dateOfBirth !== undefined) { fields.push('date_of_birth = ?'); values.push(dateOfBirth || null); }
+    if (gender !== undefined) { fields.push('gender = ?'); values.push(gender || null); }
+    if (nationality !== undefined) { fields.push('nationality = ?'); values.push(nationality || null); }
+
+    if (fields.length === 0) return;
+
+    const sql = `UPDATE users SET ${fields.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?`;
+    values.push(userId);
+    await pool.execute(sql, values);
+    return await findUserById(userId);
+}
 
 
 
