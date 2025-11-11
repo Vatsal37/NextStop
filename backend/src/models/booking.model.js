@@ -1,4 +1,5 @@
 import { pool } from '../db/db.js';
+import { formatDatesInObject } from '../utils/date.util.js';
 
 export const createBookingWithTickets = async ({ userId, contactEmail, contactPhone, passengers, scheduleId, flightDate, fareAmountPerPassenger, currency, pnr, seatIds: requestedSeatIds }) => {
 	// passengers: [{ first_name, last_name, passport_number?, date_of_birth, gender, nationality }]
@@ -106,15 +107,80 @@ export const getBookingDetails = async (pnr) => {
 	const [bookingRows] = await pool.execute(`SELECT * FROM bookings WHERE pnr = ? LIMIT 1`, [pnr]);
 	const booking = bookingRows[0];
 	if (!booking) return null;
+	
+	// Get tickets with passenger and seat info
 	const [tickets] = await pool.execute(
-		`SELECT t.*, p.first_name, p.last_name, p.passport_number, s.seat_number
+		`SELECT t.*, p.first_name, p.last_name, p.passport_number, s.seat_number, s.class_id
 		 FROM tickets t
 		 JOIN passengers p ON p.passenger_id = t.passenger_id
 		 JOIN seats s ON s.seat_id = t.seat_id
-		 WHERE t.booking_id = ?`,
+		 WHERE t.booking_id = ? AND t.ticket_status != 'CANCELLED'`,
 		[booking.booking_id]
 	);
-	return { booking, tickets };
+	
+	// Get flight details from the first ticket's instance
+	let flightDetails = null;
+	if (tickets.length > 0) {
+		const instanceId = tickets[0].instance_id;
+		const [instanceRows] = await pool.execute(
+			`SELECT fi.instance_id, fi.schedule_id, fi.flight_date, fi.status
+			 FROM flight_instances fi
+			 WHERE fi.instance_id = ?`,
+			[instanceId]
+		);
+		
+		if (instanceRows.length > 0) {
+			const instance = instanceRows[0];
+			const [scheduleRows] = await pool.execute(
+				`SELECT fs.*, 
+				 sa.airport_code AS source_code, sa.city AS source_city,
+				 da.airport_code AS destination_code, da.city AS destination_city,
+				 a.airline_name
+				 FROM flight_schedules fs
+				 JOIN flight_routes fr ON fs.route_id = fr.route_id
+				 JOIN airports sa ON fr.source_airport_id = sa.airport_id
+				 JOIN airports da ON fr.destination_airport_id = da.airport_id
+				 JOIN airlines a ON a.airline_id = fs.airline_id
+				 WHERE fs.schedule_id = ?`,
+				[instance.schedule_id]
+			);
+			
+			if (scheduleRows.length > 0) {
+				flightDetails = {
+					...scheduleRows[0],
+					flight_date: instance.flight_date
+				};
+			}
+		}
+	}
+	
+	// Format all date fields before returning
+	const formattedBooking = formatDatesInObject(booking);
+	const formattedTickets = formatDatesInObject(tickets);
+	const formattedFlightDetails = flightDetails ? formatDatesInObject(flightDetails) : null;
+	
+	return { 
+		booking: formattedBooking, 
+		tickets: formattedTickets, 
+		flightDetails: formattedFlightDetails 
+	};
+};
+
+export const getUserBookings = async (userId) => {
+	const [bookingRows] = await pool.execute(
+		`SELECT b.* FROM bookings b WHERE b.user_id = ? ORDER BY b.booking_date DESC`,
+		[userId]
+	);
+	
+	const bookings = [];
+	for (const booking of bookingRows) {
+		const bookingDetails = await getBookingDetails(booking.pnr);
+		if (bookingDetails) {
+			bookings.push(bookingDetails);
+		}
+	}
+	
+	return bookings;
 };
 
 

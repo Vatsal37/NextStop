@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
+import { useNavigate } from 'react-router'
 import CompactSearchSection from '../components/CompactSearchSection'
 import FlightCard from '../components/FlightCard'
 import FlightDetailsModal from '../components/FlightDetailsModal'
@@ -7,6 +8,7 @@ import { searchFlightsThunk, clearSearchResults } from '../store/index.js'
 
 function Search() {
   const dispatch = useDispatch()
+  const navigate = useNavigate()
   const { searchResults, loading, error, lastSearch } = useSelector(state => state.flights)
   const searchData = useSelector(state => state.search)
   const [selectedFlight, setSelectedFlight] = useState(null)
@@ -60,8 +62,21 @@ function Search() {
   }
 
   const handleBookNow = (flight) => {
-    console.log('Book now for flight:', flight)
-    // TODO: Navigate to booking page
+    // Format date to YYYY-MM-DD
+    const formatDateForAPI = (date) => {
+      if (date instanceof Date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+      return date;
+    };
+    
+    const formattedDate = formatDateForAPI(searchData.departureDate)
+    
+    // Navigate to seat selection with flightId (scheduleId) as route param, date as query param
+    navigate(`/flights/${flight.schedule_id}/select-seat?date=${formattedDate}`)
   }
 
   const handleCloseModal = () => {

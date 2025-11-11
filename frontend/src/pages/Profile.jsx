@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
-import { Edit } from 'lucide-react'
+import { Edit, X } from 'lucide-react'
 import { useDispatch } from 'react-redux'
 import { fetchMeThunk } from '@/store/index.js'
 import { authApi } from '@/services/api.js'
 import { profileCoverImage, maleProfileIcon, femaleProfileIcon, userProfileIcon } from '../assets/images/index.js'
 import { DatePicker } from '@/components/ui/date-picker'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useNavigate } from 'react-router'
 
 function Profile() {
   const user = useSelector((state) => state?.auth?.user)
   const dispatch = useDispatch()
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -175,7 +177,13 @@ function Profile() {
 
   return (
     <div>
-        <div className='w-full aspect-[8/1]'>
+        <div className='w-full aspect-[8/1] relative'>
+            <button
+              onClick={() => navigate(-1)}
+              className="absolute top-4 right-4 p-2 bg-gray-100 hover:bg-gray-200 rounded-full z-20 transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5 text-gray-900" />
+            </button>
             <img src={profileCoverImage} alt="profile cover image" className='w-full h-full object-cover' />
         </div>
         <div className='w-full relative aspect-[18/1]'>

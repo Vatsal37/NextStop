@@ -1,8 +1,8 @@
-import React, { useState, forwardRef, useImperativeHandle } from 'react'
+import React, { useState } from 'react'
 import { DatePicker } from '@/components/ui/date-picker'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
-const PassengerInfo = forwardRef(function PassengerInfo({ passengerNumber, seatNumber }, ref) {
+function PassengerDetails() {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -35,58 +35,19 @@ const PassengerInfo = forwardRef(function PassengerInfo({ passengerNumber, seatN
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  // Expose form data via ref
-  useImperativeHandle(ref, () => ({
-    getFormData: () => {
-      // Map nationality value to code
-      const nationalityOption = nationalityOptions.find(opt => opt.value === formData.nationality)
-      const nationalityCode = nationalityOption?.code || formData.nationality || ''
-      
-      // Map gender value to backend format (Male, Female, Other)
-      const genderMap = { male: 'Male', female: 'Female', other: 'Other' }
-      const gender = genderMap[formData.gender] || formData.gender || ''
-      
-      // Format date of birth to ISO string
-      let dateOfBirth = null
-      if (formData.dateOfBirth instanceof Date) {
-        const year = formData.dateOfBirth.getFullYear()
-        const month = String(formData.dateOfBirth.getMonth() + 1).padStart(2, '0')
-        const day = String(formData.dateOfBirth.getDate()).padStart(2, '0')
-        dateOfBirth = `${year}-${month}-${day}`
-      }
-      
-      return {
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        date_of_birth: dateOfBirth,
-        gender: gender,
-        nationality: nationalityCode
-      }
-    },
-    isValid: () => {
-      return formData.firstName && 
-             formData.lastName && 
-             formData.dateOfBirth && 
-             formData.gender && 
-             formData.nationality
-    }
-  }))
-
   return (
-    <div className='flex items-center px-8'>
+    <div className='flex items-center'>
       <div className='h-fit mx-auto w-full px-4 pt-2 pb-2.5 bg-white rounded-xl border border-gray-200'>
-        <h1 className='text-xl font-medium text-gray-900 leading-none tracking-tight mt-2 mb-4'>
-          Passenger {passengerNumber}{seatNumber && ` - Seat ${seatNumber}`}
-        </h1>
+        <h1 className='text-xl font-medium text-gray-900 leading-none tracking-tight mt-2 mb-4'>Passenger 1</h1>
         <div className='grid grid-cols-2 gap-4'>
           {/* Row 1: First Name */}
           <div>
-            <label htmlFor={`firstName-${passengerNumber}`} className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
               First Name
             </label>
             <input
               type="text"
-              id={`firstName-${passengerNumber}`}
+              id="firstName"
               value={formData.firstName}
               onChange={(e) => handleInputChange('firstName', e.target.value)}
               placeholder="Enter your first name"
@@ -96,12 +57,12 @@ const PassengerInfo = forwardRef(function PassengerInfo({ passengerNumber, seatN
 
           {/* Row 1: Last Name */}
           <div>
-            <label htmlFor={`lastName-${passengerNumber}`} className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
               Last Name
             </label>
             <input
               type="text"
-              id={`lastName-${passengerNumber}`}
+              id="lastName"
               value={formData.lastName}
               onChange={(e) => handleInputChange('lastName', e.target.value)}
               placeholder="Enter your last name"
@@ -170,6 +131,6 @@ const PassengerInfo = forwardRef(function PassengerInfo({ passengerNumber, seatN
       </div>
     </div>
   )
-})
+}
 
-export default PassengerInfo
+export default PassengerDetails

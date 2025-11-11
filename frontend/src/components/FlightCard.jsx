@@ -180,13 +180,13 @@ function FlightCard({ flight, onViewDetails, onBookNow }) {
             <div>
                 <button 
                   onClick={() => onViewDetails && onViewDetails(flight)}
-                  className='w-full border border-gray-400 text-md font-medium hover:bg-gray-200 text-primary px-4 py-2 rounded-md mb-2'
+                  className='w-full border border-gray-400 text-md font-medium hover:bg-gray-200 text-primary px-4 py-2 rounded-md mb-2 hover:cursor-pointer'
                 >
                   View Details
                 </button>
                 <button 
                   onClick={() => onBookNow && onBookNow(flight)}
-                  className='w-full bg-primary text-white text-md font-medium px-4 py-2 rounded-md'
+                  className='w-full bg-primary text-white text-md font-medium px-4 py-2 rounded-md hover:cursor-pointer'
                 >
                   Book Now
                 </button>

@@ -1,5 +1,6 @@
 import { pool } from '../db/db.js';
 import { ApiError } from '../utils/ApiError.js';
+import { formatDatesInObject } from '../utils/date.util.js';
 
 export const createFlightSchedule = async ({ airlineId, routeId, aircraftId, flightNumber, departureTime, arrivalTime, frequency, validFrom, validUntil }) => {
     const connection = await pool.getConnection();
@@ -104,7 +105,9 @@ export const searchFlights = async ({ sourceCode, destinationCode, date, page = 
       sourceCode, destinationCode, date,
       pattern1, pattern2
     ]);
-	return rows;
+	
+	// Format all date fields in the results
+	return formatDatesInObject(rows);
 };
 
 export const getAvailableSeatsForInstance = async ({ scheduleId, date }) => {
@@ -185,7 +188,8 @@ export const getAvailableSeatsForInstance = async ({ scheduleId, date }) => {
             ]
         );
 		await conn.commit();
-		return { instanceId, seats };
+		// Format date fields in seats data
+		return { instanceId, seats: formatDatesInObject(seats) };
 	} catch (e) {
 		await conn.rollback();
 		throw e;
@@ -199,7 +203,8 @@ export const getFlightStatus = async ({ scheduleId, date }) => {
 		`SELECT * FROM flight_instances WHERE schedule_id = ? AND flight_date = ? LIMIT 1`,
 		[scheduleId, date]
 	);
-	return rows[0] || null;
+	const result = rows[0] || null;
+	return result ? formatDatesInObject(result) : null;
 };
 
 

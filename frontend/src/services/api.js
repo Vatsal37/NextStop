@@ -46,4 +46,15 @@ export const flightsApi = {
     getStatus: (id, params) => api.get(`/flights/${id}/status`, { params }),
 };
 
+export const bookingsApi = {
+    create: (payload) => api.post('/bookings', payload),
+    getByPnr: (pnr) => api.get(`/bookings/${pnr}`),
+    getMyBookings: () => api.get('/bookings/my-bookings'),
+};
+
+export const paymentsApi = {
+    create: (payload) => api.post('/payments', payload),
+    getByBookingId: (bookingId) => api.get(`/payments/${bookingId}`),
+};
+
 

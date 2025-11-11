@@ -9,24 +9,26 @@ import { Provider } from 'react-redux'
 import { PersistGate } from 'redux-persist/integration/react'
 import { persistor, store } from './store/index.js'
 import Search from './pages/Search.jsx'
-import FlightCardTest from './pages/FlightCardTest.jsx'
 import SeatSelection from './pages/SeatSelection.jsx'
 import SignUp from './components/SignUp.jsx'
 import Profile from './pages/Profile.jsx'
+import Payment from './pages/Payment.jsx'
 import BookingConfirmation from './components/BookingConfirmation.jsx'
+import MyBookings from './pages/MyBookings.jsx'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <>
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
-      <Route path="/card" element={<FlightCardTest />} />
-      <Route path="/seat" element={<SeatSelection />} />
+      <Route path="/flights/:flightId/select-seat" element={<SeatSelection />} />
+      <Route path="/payment" element={<Payment />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/confirmation" element={<BookingConfirmation />} />
       <Route path="/" element={<App />}>
         <Route index element={<Home />} />
         <Route path="/search" element={<Search />} />
+        <Route path="/bookings" element={<MyBookings />} />
       </Route>
     </>
   )

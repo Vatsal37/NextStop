@@ -1,7 +1,39 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router';
 import { bookingConfirmationCoverImage, logo, routeIcon } from '../assets/images';
+import { bookingsApi } from '../services/api';
 
 export default function BookingConfirmation() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const pnr = searchParams.get('pnr');
+  const [bookingData, setBookingData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchBooking = async () => {
+      if (!pnr) {
+        setError('PNR not provided');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const response = await bookingsApi.getByPnr(pnr);
+        setBookingData(response.data?.data || null);
+      } catch (err) {
+        console.error('Error fetching booking:', err);
+        setError(err?.response?.data?.message || 'Failed to load booking details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBooking();
+  }, [pnr]);
+
   const formatDate = (dateStr) => {
     if (!dateStr) return 'N/A';
     try {
@@ -27,6 +59,100 @@ export default function BookingConfirmation() {
       return dateStr;
     }
   };
+
+  const formatDateTime = (dateStr, timeStr) => {
+    if (!dateStr && !timeStr) return 'N/A';
+    
+    let datePart = '';
+    let timePart = '';
+    
+    if (dateStr) {
+      try {
+        const date = new Date(dateStr);
+        datePart = date.toLocaleDateString('en-US', { 
+          day: 'numeric', 
+          month: 'short',
+          weekday: 'short'
+        });
+      } catch {
+        datePart = dateStr;
+      }
+    }
+    
+    if (timeStr) {
+      if (typeof timeStr === 'string' && timeStr.match(/^\d{2}:\d{2}:\d{2}$/)) {
+        timePart = timeStr.slice(0, 5); // Get HH:mm
+      } else {
+        timePart = timeStr;
+      }
+    }
+    
+    if (datePart && timePart) {
+      return `${datePart.toUpperCase()}, ${timePart}`;
+    }
+    return datePart || timePart || 'N/A';
+  };
+
+  const calculateDuration = (departureTime, arrivalTime) => {
+    if (!departureTime || !arrivalTime) return '';
+    
+    if (typeof departureTime === 'string' && departureTime.match(/^\d{2}:\d{2}:\d{2}$/) &&
+        typeof arrivalTime === 'string' && arrivalTime.match(/^\d{2}:\d{2}:\d{2}$/)) {
+      const parseTime = (timeStr) => {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        return hours * 60 + minutes;
+      };
+      
+      const depMins = parseTime(departureTime);
+      const arrMins = parseTime(arrivalTime);
+      const diffMins = arrMins - depMins;
+      const totalMins = diffMins >= 0 ? diffMins : diffMins + (24 * 60);
+      
+      const hours = Math.floor(totalMins / 60);
+      const minutes = totalMins % 60;
+      return `${hours}h ${minutes}m`;
+    }
+    return '';
+  };
+
+  const getClassName = (classId) => {
+    const classMap = {
+      1: 'Economy',
+      2: 'Premium Economy',
+      3: 'Business',
+      4: 'First Class'
+    };
+    return classMap[classId] || 'Unknown';
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0f2543]">
+        <div className="text-white text-xl">Loading booking details...</div>
+      </div>
+    );
+  }
+
+  if (error || !bookingData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0f2543]">
+        <div className="bg-white rounded-lg border border-red-200 p-6 text-center text-red-600 max-w-md">
+          <p className="text-lg font-medium mb-2">Error Loading Booking</p>
+          <p className="text-sm">{error || 'Booking not found'}</p>
+          <button
+            onClick={() => navigate('/')}
+            className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+          >
+            Go to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const { booking, tickets, flightDetails } = bookingData;
+  const firstTicket = tickets && tickets.length > 0 ? tickets[0] : null;
+
   return (
     <div className="min-h-screen relative overflow-hidden bg-[#0f2543]">
 
@@ -59,27 +185,27 @@ export default function BookingConfirmation() {
             <div className="px-6 py-5">
               <div className='flex justify-between items-center w-full'>
                 <div className='flex flex-col'>
-                  <p className='text-md text-gray-500 mb-2'>Detroit</p>
+                  <p className='text-md text-gray-500 mb-2'>{flightDetails?.source_city || 'Source'}</p>
                   <h1 className='text-3xl font-semibold leading-none tracking-tight mb-2'>
-                    DTW
+                    {flightDetails?.source_code || 'N/A'}
                   </h1>
                   <p className='text-md text-gray-500'>
-                    FRI, JUL 10 8:52 AM
+                    {flightDetails ? formatDateTime(flightDetails.flight_date, flightDetails.departure_time) : 'N/A'}
                   </p>
                 </div>
                 <div className='relative'>
                   <img src={routeIcon} alt='routeIcon' className='w-fit h-10' />
                   <p className='text-md text-gray-500 absolute top-full left-1/2 -translate-x-1/2 -translate-y-1/2'>
-                    2h 0m
+                    {flightDetails ? calculateDuration(flightDetails.departure_time, flightDetails.arrival_time) : 'N/A'}
                   </p>
                 </div>
                 <div className='flex flex-col text-right'>
-                  <p className='text-md text-gray-500 mb-2'>New York</p>
+                  <p className='text-md text-gray-500 mb-2'>{flightDetails?.destination_city || 'Destination'}</p>
                   <h1 className='text-3xl font-semibold leading-none tracking-tight mb-2'>
-                    JFK
+                    {flightDetails?.destination_code || 'N/A'}
                   </h1>
                   <p className='text-md text-gray-500'>
-                    FRI, JUL 10 10:52 AM
+                    {flightDetails ? formatDateTime(flightDetails.flight_date, flightDetails.arrival_time) : 'N/A'}
                   </p>
                 </div>
               </div>
@@ -88,30 +214,46 @@ export default function BookingConfirmation() {
             {/* Thin divider */}
             <div className="h-px bg-gray-200" />
 
-            {/* Details grid */}
-            <div className="grid grid-cols-4 gap-4 px-6 py-5">
-              <div className="text-center">
-                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Flight</div>
-                <div className="text-[13px] font-semibold text-gray-900">DELTA 945</div>
+            {/* Details grid - Show first ticket or all tickets if multiple */}
+            {tickets && tickets.length > 0 && (
+              <div className="grid grid-cols-4 gap-4 px-6 py-5">
+                <div className="text-center">
+                  <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Flight</div>
+                  <div className="text-[13px] font-semibold text-gray-900">
+                    {flightDetails?.flight_number || flightDetails?.airline_name || 'N/A'}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Passenger</div>
+                  <div className="text-[13px] font-semibold text-gray-900">
+                    {tickets.length === 1 
+                      ? `${firstTicket.first_name} ${firstTicket.last_name}`.toUpperCase()
+                      : `${tickets.length} Passengers`
+                    }
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Class</div>
+                  <div className="text-[13px] font-semibold text-gray-900">
+                    {firstTicket ? getClassName(firstTicket.class_id).toUpperCase() : 'N/A'}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Seat{tickets.length > 1 ? 's' : ''}</div>
+                  <div className="text-[13px] font-semibold text-gray-900">
+                    {tickets.length === 1 
+                      ? firstTicket.seat_number 
+                      : tickets.map(t => t.seat_number).join(', ')
+                    }
+                  </div>
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Passenger</div>
-                <div className="text-[13px] font-semibold text-gray-900">TIANYI QI</div>
-              </div>
-              <div className="text-center">
-                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Class</div>
-                <div className="text-[13px] font-semibold text-gray-900">BASIC ECONOMY (E)</div>
-              </div>
-              <div className="text-center">
-                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Seat</div>
-                <div className="text-[13px] font-semibold text-gray-900">12B</div>
-              </div>
-            </div>
+            )}
 
             {/* Confirmation strip */}
             <div className="px-6 py-3 bg-[#e8f1fb] flex items-center justify-center gap-10">
               <div className="text-[10px] text-gray-600 uppercase tracking-wider">Confirmation Number</div>
-              <div className="text-[13px] font-bold text-[#1e3a5f] tracking-wide">GXPUBG</div>
+              <div className="text-[13px] font-bold text-[#1e3a5f] tracking-wide">{booking.pnr || 'N/A'}</div>
             </div>
           </div>
         </div>
@@ -126,19 +268,25 @@ export default function BookingConfirmation() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[13px]">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Ticket#:</span>
-                  <span className="text-gray-900 font-medium">001234459000</span>
+                  <span className="text-gray-900 font-medium">
+                    {firstTicket ? firstTicket.ticket_number : 'N/A'}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Method of Payment</span>
-                  <span className="text-gray-900 font-semibold">Amount</span>
+                  <span className="text-gray-900 font-medium">Card Payment</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Issue Date:</span>
-                  <span className="text-gray-900 font-medium">{formatDate('27JUN20')}</span>
+                  <span className="text-gray-900 font-medium">
+                    {formatDate(booking.booking_date || booking.created_at)}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-700">CA***************1234</span>
-                  <span className="text-gray-900 font-medium">$98.10 USD</span>
+                  <span className="text-gray-600">Amount</span>
+                  <span className="text-gray-900 font-medium">
+                    {booking.currency === 'INR' ? 'Rs' : '$'} {parseFloat(booking.total_amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {booking.currency || 'USD'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -146,28 +294,57 @@ export default function BookingConfirmation() {
             {/* Charges */}
             <div className="px-6 py-5">
               <div className="text-[12px] font-bold text-gray-800 uppercase tracking-wider mb-2">Price Breakdown</div>
-              <div className="bg-gray-100 text-gray-800 text-[13px] font-medium px-4 py-3 mb-2 rounded-sm">Class Information</div>
-              <div className="flex items-center justify-between text-[13px] px-4 py-3 border-b border-gray-100">
-                <span className="text-gray-800">BASIC ECONOMY Class (Code: E)</span>
-                <span className="text-gray-900 font-medium">$98.10 USD</span>
-              </div>
-
-              <div className="bg-gray-100 text-gray-800 text-[13px] font-medium px-4 py-3 mt-5 mb-2 rounded-sm">Price Details</div>
-              <div className="flex items-start justify-between px-4 py-3 border-b border-gray-100">
-                <div className="flex-1 text-[13px] pr-4">
-                  <div className="font-medium text-gray-800 mb-1">Base Price</div>
-                  <div className="text-xs text-gray-600 leading-snug">Base fare for the selected seat class</div>
-                </div>
-                <span className="text-[13px] text-gray-900 font-medium ml-4">$88.00 USD</span>
-              </div>
-              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-                <div className="flex-1 text-[13px] font-medium text-gray-800">Tax Amount</div>
-                <span className="text-[13px] text-gray-900 font-medium ml-4">$10.10 USD</span>
-              </div>
+              
+              {/* Show each ticket/passenger */}
+              {tickets && tickets.map((ticket, index) => {
+                const basePrice = parseFloat(ticket.fare_amount || 0);
+                const taxAmount = parseFloat(ticket.tax_amount || 0);
+                const ticketTotal = basePrice + taxAmount;
+                const className = getClassName(ticket.class_id);
+                
+                return (
+                  <div key={ticket.ticket_id || index} className="mb-4">
+                    <div className="bg-gray-100 text-gray-800 text-[13px] font-medium px-4 py-3 mb-2 rounded-sm">
+                      {tickets.length > 1 ? `Passenger ${index + 1}: ` : ''}{className} Class
+                    </div>
+                    <div className="flex items-center justify-between text-[13px] px-4 py-3 border-b border-gray-100">
+                      <span className="text-gray-800">
+                        {ticket.first_name} {ticket.last_name} - Seat {ticket.seat_number}
+                      </span>
+                      <span className="text-gray-900 font-medium">
+                        {booking.currency === 'INR' ? 'Rs' : '$'} {ticketTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {booking.currency || 'USD'}
+                      </span>
+                    </div>
+                    
+                    {index === 0 && (
+                      <>
+                        <div className="bg-gray-100 text-gray-800 text-[13px] font-medium px-4 py-3 mt-5 mb-2 rounded-sm">Price Details</div>
+                        <div className="flex items-start justify-between px-4 py-3 border-b border-gray-100">
+                          <div className="flex-1 text-[13px] pr-4">
+                            <div className="font-medium text-gray-800 mb-1">Base Price</div>
+                            <div className="text-xs text-gray-600 leading-snug">Base fare per passenger</div>
+                          </div>
+                          <span className="text-[13px] text-gray-900 font-medium ml-4">
+                            {booking.currency === 'INR' ? 'Rs' : '$'} {basePrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {booking.currency || 'USD'}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                          <div className="flex-1 text-[13px] font-medium text-gray-800">Tax Amount</div>
+                          <span className="text-[13px] text-gray-900 font-medium ml-4">
+                            {booking.currency === 'INR' ? 'Rs' : '$'} {taxAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {booking.currency || 'USD'}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
 
               <div className="flex items-center justify-between px-4 py-5 mt-2.5 bg-white text-[15px] font-bold text-[#1e3a5f] border-t-2 border-gray-200">
-                <span>Ticket Total Amount</span>
-                <span>$98.10 USD</span>
+                <span>Total Amount</span>
+                <span>
+                  {booking.currency === 'INR' ? 'Rs' : '$'} {parseFloat(booking.total_amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {booking.currency || 'USD'}
+                </span>
               </div>
             </div>
           </div>

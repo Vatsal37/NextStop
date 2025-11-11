@@ -10,6 +10,27 @@ import IndiaGate from './places/IndiaGate.jpg'
 import TajMahal from './places/TajMahal.jpg'
 import JalMahal from './places/JalMahal.jpg'
 import StatueOfUnity from './places/StatueOfUnity.jpg'
+import Ahmedabad from './places/Ahmedabad.webp'
+import Bengaluru from './places/Bengaluru.webp'
+import Bhubaneswar from './places/Bhubaneswar.webp'
+import Chandigarh from './places/Chandigarh.webp'
+import Chennai from './places/Chennai.webp'
+import Delhi from './places/Delhi.webp'
+import Goa from './places/Goa.webp'
+import Guwahati from './places/Guwahati.webp'
+import Hyderabad from './places/Hyderabad.webp'
+import Jaipur from './places/Jaipur.webp'
+import Kochi from './places/Kochi.webp'
+import Kolkata from './places/Kolkata.webp'
+import Lucknow from './places/Lucknow.webp'
+import Mumbai from './places/Mumbai.webp'
+import Nagpur from './places/Nagpur.webp'
+import Patna from './places/Patna.webp'
+import Pune from './places/Pune.webp'
+import Srinagar from './places/Srinagar.webp'
+import Surat from './places/Surat.webp'
+import Thiruvananthapuram from './places/Thiruvananthapuram.webp'
+import Varanasi from './places/Varanasi.webp'
 import FAQGirl from './FAQGirl.png'
 import AirIndia from './airlines/AirIndia.webp'
 import BritishAirlines from './airlines/BritishAirlines.webp'
@@ -32,6 +53,7 @@ import profileCoverImage from './profileCoverImage.webp'
 import bookingConfirmationCoverImage from './bookingConfirmationCoverImage.webp'
 import bookedSeatIcon from './seat/bookedSeat.png'
 import availableSeatIcon from './seat/availableSeat.png'
+import dehradun from './places/Dehradun.webp'
 
 export {
     logo,
@@ -46,6 +68,27 @@ export {
     TajMahal,
     JalMahal,
     StatueOfUnity,
+    Ahmedabad,
+    Bengaluru,
+    Bhubaneswar,
+    Chandigarh,
+    Chennai,
+    Delhi,
+    Goa,
+    Guwahati,
+    Hyderabad,
+    Jaipur,
+    Kochi,
+    Kolkata,
+    Lucknow,
+    Mumbai,
+    Nagpur,
+    Patna,
+    Pune,
+    Srinagar,
+    Surat,
+    Thiruvananthapuram,
+    Varanasi,
     FAQGirl,
     AirIndia,
     BritishAirlines,
@@ -68,4 +111,5 @@ export {
     bookingConfirmationCoverImage,
     bookedSeatIcon,
     availableSeatIcon,
+    dehradun,
 }
