@@ -1,6 +1,7 @@
 import { pool } from '../db/db.js';
 import { formatDatesInObject, formatDateOnly } from '../utils/date.util.js';
 import { getPaymentsByBooking } from './payment.model.js';
+import { getRefundsByBooking } from './refund.model.js';
 
 export const createBookingWithTickets = async ({ userId, contactEmail, contactPhone, passengers, scheduleId, flightDate, fareAmountPerPassenger, currency, pnr, seatIds: requestedSeatIds }) => {
 	// passengers: [{ first_name, last_name, passport_number?, date_of_birth, gender, nationality }]
@@ -117,7 +118,7 @@ export const getBookingDetails = async (pnr) => {
 		 FROM tickets t
 		 JOIN passengers p ON p.passenger_id = t.passenger_id
 		 JOIN seats s ON s.seat_id = t.seat_id
-		 WHERE t.booking_id = ? AND t.ticket_status != 'CANCELLED'`,
+		 WHERE t.booking_id = ?`,
 		[booking.booking_id]
 	);
 	
@@ -161,17 +162,22 @@ export const getBookingDetails = async (pnr) => {
 	const payments = await getPaymentsByBooking(booking.booking_id);
 	const payment = payments && payments.length > 0 ? payments[0] : null; // Get the most recent payment
 	
+	// Get refunds information
+	const refunds = await getRefundsByBooking(booking.booking_id);
+	
 	// Format all date fields before returning
 	const formattedBooking = formatDatesInObject(booking);
 	const formattedTickets = formatDatesInObject(tickets);
 	const formattedFlightDetails = flightDetails ? formatDatesInObject(flightDetails) : null;
 	const formattedPayment = payment ? formatDatesInObject(payment) : null;
+	const formattedRefunds = formatDatesInObject(refunds);
 	
 	return { 
 		booking: formattedBooking, 
 		tickets: formattedTickets,
 		flightDetails: formattedFlightDetails,
-		payment: formattedPayment
+		payment: formattedPayment,
+		refunds: formattedRefunds
 	};
 };
 

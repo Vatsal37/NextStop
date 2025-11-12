@@ -62,4 +62,13 @@ export const paymentsApi = {
     getByBookingId: (bookingId) => api.get(`/payments/${bookingId}`),
 };
 
+export const cancellationsApi = {
+    cancelTicket: (payload) => api.post('/cancellations', payload),
+};
+
+export const refundsApi = {
+    processRefund: (payload) => api.post('/refunds', payload),
+    getByBookingId: (bookingId) => api.get(`/refunds/${bookingId}`),
+};
+
 

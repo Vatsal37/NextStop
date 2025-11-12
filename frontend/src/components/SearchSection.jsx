@@ -264,11 +264,11 @@ function SearchSection() {
           <p className='text-xs font-medium text-gray-600 mb-2 uppercase tracking-wide'>Trending</p>
           <div className='flex flex-wrap justify-center gap-2'>
             {[
-              { city: 'Tokyo', flag: '🇯🇵' },
-              { city: 'Paris', flag: '🇫🇷' },
-              { city: 'New York', flag: '🇺🇸' },
-              { city: 'Dubai', flag: '🇦🇪' },
-              { city: 'London', flag: '🇬🇧' }
+              { city: 'Leh–Ladakh', flag: '🏔️' },
+              { city: 'Rishikesh', flag: '🧘' },
+              { city: 'Jaipur', flag: '🏰' },
+              { city: 'Goa', flag: '🏖️' },
+              { city: 'Kerala Backwaters', flag: '🚤' }
             ].map((dest) => (
               <button
                 key={dest.city}

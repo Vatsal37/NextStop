@@ -1,26 +1,33 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router'
 import BookingCard from '../components/BookingCard'
-import { bookingsApi } from '../services/api'
+import CancellationModal from '../components/CancellationModal'
+import { bookingsApi, cancellationsApi, refundsApi } from '../services/api'
 
 function MyBookings() {
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [isCancellationModalOpen, setIsCancellationModalOpen] = useState(false)
+  const [selectedBooking, setSelectedBooking] = useState(null)
+  const [cancellationError, setCancellationError] = useState('')
+  const navigate = useNavigate()
+
+  const fetchBookings = async () => {
+    try {
+      setLoading(true)
+      setError('')
+      const response = await bookingsApi.getMyBookings()
+      setBookings(response.data?.data || [])
+    } catch (err) {
+      console.error('Error fetching bookings:', err)
+      setError(err?.response?.data?.message || 'Failed to load bookings')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const fetchBookings = async () => {
-      try {
-        setLoading(true)
-        const response = await bookingsApi.getMyBookings()
-        setBookings(response.data?.data || [])
-      } catch (err) {
-        console.error('Error fetching bookings:', err)
-        setError(err?.response?.data?.message || 'Failed to load bookings')
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchBookings()
   }, [])
 
@@ -52,10 +59,27 @@ function MyBookings() {
       )
     }
 
+    const handleViewDetails = (bookingData) => {
+      const pnr = bookingData?.booking?.pnr
+      if (!pnr) return
+      navigate(`/confirmation?pnr=${encodeURIComponent(pnr)}`)
+    }
+
+    const handleCancel = (bookingData) => {
+      setSelectedBooking(bookingData)
+      setCancellationError('')
+      setIsCancellationModalOpen(true)
+    }
+
     return (
       <div className="space-y-4">
         {bookings.map((bookingData, index) => (
-          <BookingCard key={bookingData.booking?.pnr || index} bookingData={bookingData} />
+          <BookingCard
+            key={bookingData.booking?.pnr || index}
+            bookingData={bookingData}
+            onViewDetails={handleViewDetails}
+            onCancel={handleCancel}
+          />
         ))}
       </div>
     )
@@ -75,6 +99,65 @@ function MyBookings() {
         </div>
         {renderBookings()}
       </div>
+
+      {/* Cancellation Modal */}
+      <CancellationModal
+        isOpen={isCancellationModalOpen}
+        onClose={() => {
+          setIsCancellationModalOpen(false)
+          setSelectedBooking(null)
+          setCancellationError('')
+        }}
+        bookingData={selectedBooking}
+        onConfirm={async (selectedTicketIds, refundInfo) => {
+          if (!selectedBooking) return
+          setCancellationError('')
+
+          try {
+            const payment = selectedBooking.payment
+            if (!payment || !payment.payment_id) {
+              throw new Error('Payment information not found. Cannot process refund.')
+            }
+
+            const cancellationPromises = selectedTicketIds.map(ticketId =>
+              cancellationsApi.cancelTicket({ ticketId, reason: 'User requested cancellation' })
+            )
+
+            const cancellationResults = await Promise.all(cancellationPromises)
+
+            const refundPromises = cancellationResults.map((result, index) => {
+              const ticketId = selectedTicketIds[index]
+              const refundAmount = refundInfo.perTicket.find(t => t.ticketId === ticketId)?.amount || 0
+
+              return refundsApi.processRefund({
+                cancellationId: result.data.data.cancellation_id,
+                paymentId: payment.payment_id,
+                refundAmount,
+                refundMethod: 'ORIGINAL_PAYMENT_METHOD'
+              })
+            })
+
+            await Promise.all(refundPromises)
+
+            setIsCancellationModalOpen(false)
+            setSelectedBooking(null)
+            await fetchBookings()
+          } catch (err) {
+            console.error('Cancellation error:', err)
+            const message = err?.response?.data?.message || err?.message || 'Failed to cancel tickets. Please try again.'
+            setCancellationError(message)
+            throw err
+          }
+        }}
+      />
+
+      {/* Error Toast */}
+      {cancellationError && (
+        <div className="fixed bottom-4 right-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg shadow-lg max-w-md z-50">
+          <p className="font-medium">Cancellation Error</p>
+          <p className="text-sm mt-1">{cancellationError}</p>
+        </div>
+      )}
     </div>
   )
 }

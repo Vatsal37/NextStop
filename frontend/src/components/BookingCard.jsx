@@ -298,6 +298,7 @@ function BookingCard({ bookingData, onViewDetails, onCancel }) {
           )}
         </div>
       </div>
+
     </div>
   )
 }
