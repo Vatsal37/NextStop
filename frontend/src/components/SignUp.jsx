@@ -1,16 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import { useDispatch } from 'react-redux';
 import { authApi } from '../services/api.js';
 import { loginThunk, fetchMeThunk } from '../store/index.js';
 import Toast from './ui/Toast.jsx';
 import { signupBGImage, signupCover, logo } from '../assets/images/index.js';
+import { validatePassword } from '../utils/passwordValidation.js';
 
 // Placeholder images - replace with your actual imports
 
 function SignUp() {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -22,10 +24,10 @@ function SignUp() {
   
   // Form state
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: ''
+    firstName: location.state?.formData?.firstName || '',
+    lastName: location.state?.formData?.lastName || '',
+    email: location.state?.formData?.email || '',
+    password: location.state?.formData?.password || ''
   });
 
   const handleInputChange = (field, value) => {
@@ -42,8 +44,13 @@ function SignUp() {
       return;
     }
     
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
+    // Validate password format
+    const passwordValidation = validatePassword(formData.password);
+    if (!passwordValidation.isValid) {
+      const errorMessage = passwordValidation.errors[0];
+      setError(''); // Clear inline error
+      setToastMessage(errorMessage);
+      setToastCode(400);
       return;
     }
     
@@ -52,24 +59,20 @@ function SignUp() {
     
     try {
       // Register the user
-      await authApi.register(formData);
+      const response = await authApi.register(formData);
       
-      // Automatically log in the user after successful registration
-      const action = await dispatch(loginThunk({ 
-        email: formData.email, 
-        password: formData.password 
-      }));
-      
-      if (loginThunk.fulfilled.match(action)) {
-        // Fetch complete user data after successful login
-        await dispatch(fetchMeThunk());
-        // Show success toast and navigate to home
-        setToastMessage('Account created successfully! Welcome!');
-        setToastCode(201);
-        setTimeout(() => navigate('/'), 1000);
-      } else {
-        setError(action.payload || 'Registration successful but login failed. Please log in manually.');
+      // Check if backend says to redirect to verification (unverified user)
+      if (response.data?.data?.redirectToVerification) {
+        setToastMessage('Please verify your email to continue.');
+        setToastCode(200);
+        setTimeout(() => navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`, { state: { from: '/signup', formData } }), 1500);
+        return;
       }
+      
+      // Show success message and redirect to email verification
+      setToastMessage('Registration successful! Please verify your email.');
+      setToastCode(201);
+      setTimeout(() => navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`, { state: { from: '/signup', formData } }), 1500);
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.message || 'Registration failed. Please try again.';
       
@@ -254,7 +257,7 @@ function SignUp() {
               </div>
 
               {/* Password Input */}
-              <div className="mb-6">
+              <div className="mb-4">
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                   Password
                 </label>
@@ -276,13 +279,16 @@ function SignUp() {
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
+                <div className="mt-2.5 p-2 bg-blue-50 border border-blue-200 rounded-lg text-xs text-gray-700">
+                  <p>Must be at least 8 characters, include a number and a special character.</p>
+                </div>
               </div>
 
               {/* Sign Up Button */}
               <button
                 onClick={handleSubmit}
                 disabled={isLoading}
-                className="w-full bg-sky-900 hover:bg-sky-950 text-white font-semibold py-3 rounded-lg transition duration-200 mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-sky-900 hover:bg-sky-950 text-white font-semibold py-3 rounded-lg transition duration-200 mb-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? 'Creating Account...' : 'Create Account'}
               </button>

@@ -7,6 +7,7 @@ dotenv.config({ path: './.env' });
 
 const { app } = await import('./app.js');
 const { default: connectDB } = await import('./db/db.js');
+const { cleanupExpiredOTPs } = await import('./models/otp.model.js');
 
 connectDB()
     .then(() => {
@@ -17,7 +18,20 @@ connectDB()
         io.on('connection', () => {});
         server.listen(port, () => {
             console.log(`Server is running on port ${port}`);
-        })
+        });
+
+        // Clean up expired OTPs on server restart
+        // Expired OTPs are already rejected during verification (expires_at > NOW()),
+        // this cleanup just removes old expired entries from the database
+        cleanupExpiredOTPs()
+            .then((deletedCount) => {
+                if (deletedCount > 0) {
+                    console.log(`[OTP Cleanup] Deleted ${deletedCount} expired OTP(s) on server start`);
+                }
+            })
+            .catch((error) => {
+                console.error('[OTP Cleanup] Error cleaning up expired OTPs:', error);
+            });
     })
     .catch((err) => {
         console.log("MySQL connection failed !!! ", err);

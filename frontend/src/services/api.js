@@ -31,6 +31,11 @@ api.interceptors.request.use((config) => {
 export const authApi = {
 	login: (payload) => api.post('/auth/login', payload),
 	register: (payload) => api.post('/auth/register', payload),
+	verifyEmail: (payload) => api.post('/auth/verify-email', payload),
+	resendOTP: (payload) => api.post('/auth/resend-otp', payload),
+	forgotPassword: (payload) => api.post('/auth/forgot-password', payload),
+	verifyForgotPasswordOTP: (payload) => api.post('/auth/verify-forgot-password-otp', payload),
+	resetPassword: (payload) => api.post('/auth/reset-password', payload),
     me: () => api.get('/auth/me'),
     updateMe: (payload) => api.put('/auth/me', payload),
 };

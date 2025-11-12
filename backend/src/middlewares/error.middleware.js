@@ -4,12 +4,19 @@ import { ApiError } from '../utils/ApiError.js'
 // Must have 4 parameters to be recognized by Express
 const errorHandler = (err, req, res, next) => {
     if (err instanceof ApiError) {
-        return res.status(err.statusCode).json({
+        const response = {
             success: false,
             message: err.message,
             errors: err.errors ?? [],
             data: err.data ?? null
-        })
+        };
+        
+        // Include remainingSeconds if present (for rate limiting)
+        if (err.remainingSeconds !== undefined) {
+            response.remainingSeconds = err.remainingSeconds;
+        }
+        
+        return res.status(err.statusCode).json(response);
     }
 
     const statusCode = err.statusCode || 500

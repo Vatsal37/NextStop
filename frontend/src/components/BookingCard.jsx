@@ -200,7 +200,7 @@ function BookingCard({ bookingData, onViewDetails, onCancel }) {
         <img 
           src={destinationImage} 
           alt={destinationCity} 
-          className='w-full h-full object-cover rounded-2xl' 
+          className='w-full h-full aspect-video object-cover rounded-2xl' 
         />
         {isHovered && landmark && (
           <div className='absolute inset-0 bg-black/60 rounded-2xl flex items-center justify-center p-4'>

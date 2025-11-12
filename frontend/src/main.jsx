@@ -11,6 +11,7 @@ import { persistor, store } from './store/index.js'
 import Search from './pages/Search.jsx'
 import SeatSelection from './pages/SeatSelection.jsx'
 import SignUp from './components/SignUp.jsx'
+import VerifyEmail from './components/VerifyEmail.jsx'
 import Profile from './pages/Profile.jsx'
 import Payment from './pages/Payment.jsx'
 import BookingConfirmation from './components/BookingConfirmation.jsx'
@@ -21,6 +22,7 @@ const router = createBrowserRouter(
     <>
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/flights/:flightId/select-seat" element={<SeatSelection />} />
       <Route path="/payment" element={<Payment />} />
       <Route path="/profile" element={<Profile />} />
