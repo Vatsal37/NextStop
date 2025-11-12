@@ -1,5 +1,6 @@
 import { pool } from '../db/db.js';
-import { formatDatesInObject } from '../utils/date.util.js';
+import { formatDatesInObject, formatDateOnly } from '../utils/date.util.js';
+import { getPaymentsByBooking } from './payment.model.js';
 
 export const createBookingWithTickets = async ({ userId, contactEmail, contactPhone, passengers, scheduleId, flightDate, fareAmountPerPassenger, currency, pnr, seatIds: requestedSeatIds }) => {
 	// passengers: [{ first_name, last_name, passport_number?, date_of_birth, gender, nationality }]
@@ -72,10 +73,12 @@ export const createBookingWithTickets = async ({ userId, contactEmail, contactPh
 				if (pr.length > 0) passengerId = pr[0].passenger_id;
 			}
 			if (!passengerId) {
+				// Format date_of_birth to YYYY-MM-DD format for MySQL DATE column
+				const formattedDateOfBirth = formatDateOnly(p.date_of_birth);
 				const [insP] = await conn.execute(
 					`INSERT INTO passengers (first_name, last_name, passport_number, date_of_birth, gender, nationality, email, phone)
 					 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-					[p.first_name, p.last_name, p.passport_number || null, p.date_of_birth, p.gender, p.nationality, p.email || null, p.phone || null]
+					[p.first_name, p.last_name, p.passport_number || null, formattedDateOfBirth, p.gender, p.nationality, p.email || null, p.phone || null]
 				);
 				passengerId = insP.insertId;
 			}
@@ -154,15 +157,21 @@ export const getBookingDetails = async (pnr) => {
 		}
 	}
 	
+	// Get payment information
+	const payments = await getPaymentsByBooking(booking.booking_id);
+	const payment = payments && payments.length > 0 ? payments[0] : null; // Get the most recent payment
+	
 	// Format all date fields before returning
 	const formattedBooking = formatDatesInObject(booking);
 	const formattedTickets = formatDatesInObject(tickets);
 	const formattedFlightDetails = flightDetails ? formatDatesInObject(flightDetails) : null;
+	const formattedPayment = payment ? formatDatesInObject(payment) : null;
 	
 	return { 
 		booking: formattedBooking, 
-		tickets: formattedTickets, 
-		flightDetails: formattedFlightDetails 
+		tickets: formattedTickets,
+		flightDetails: formattedFlightDetails,
+		payment: formattedPayment
 	};
 };
 

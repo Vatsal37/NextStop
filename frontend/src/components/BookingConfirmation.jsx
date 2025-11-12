@@ -150,8 +150,24 @@ export default function BookingConfirmation() {
     );
   }
 
-  const { booking, tickets, flightDetails } = bookingData;
+  const { booking, tickets, flightDetails, payment } = bookingData;
   const firstTicket = tickets && tickets.length > 0 ? tickets[0] : null;
+  
+  // Format payment method for display
+  const getPaymentMethodDisplay = (paymentMethod) => {
+    if (!paymentMethod) return 'N/A';
+    const methodMap = {
+      'CARD': 'Card Payment',
+      'CREDIT_CARD': 'Card Payment',
+      'DEBIT_CARD': 'Debit Card Payment',
+      'UPI': 'UPI Payment',
+      'NETBANKING': 'NetBanking Payment',
+      'NET_BANKING': 'NetBanking Payment',
+      'WALLET': 'Wallet Payment',
+      'CASH': 'Cash Payment'
+    };
+    return methodMap[paymentMethod] || paymentMethod;
+  };
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-[#0f2543]">
@@ -274,7 +290,9 @@ export default function BookingConfirmation() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Method of Payment</span>
-                  <span className="text-gray-900 font-medium">Card Payment</span>
+                  <span className="text-gray-900 font-medium">
+                    {payment ? getPaymentMethodDisplay(payment.payment_method) : 'N/A'}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Issue Date:</span>

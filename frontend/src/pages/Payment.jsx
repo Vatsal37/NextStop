@@ -21,6 +21,12 @@ function Payment() {
   const handlePayment = async (e) => {
     e.preventDefault()
     
+    // Ensure paymentMethod is set
+    if (!paymentMethod) {
+      setError('Please select a payment method')
+      return
+    }
+    
     // Validate payment method specific fields
     if (paymentMethod === 'CARD') {
       if (!cardNumber || !cardName || !expiryDate || !cvv) {
@@ -46,6 +52,9 @@ function Payment() {
     setError('')
 
     try {
+      // Ensure paymentMethod is set (fallback to CARD if somehow undefined)
+      const selectedPaymentMethod = paymentMethod || 'CARD'
+      
       // Generate a mock transaction ID (in real app, this would come from payment gateway)
       const transactionId = `TXN${Date.now()}${Math.random().toString(36).substr(2, 9).toUpperCase()}`
       
@@ -53,11 +62,12 @@ function Payment() {
         bookingId: parseInt(bookingId),
         amount: amount,
         currency: 'INR',
-        paymentMethod: paymentMethod,
+        paymentMethod: selectedPaymentMethod,
         transactionId: transactionId,
-        paymentGateway: paymentMethod === 'CARD' ? 'STRIPE' : paymentMethod === 'UPI' ? 'RAZORPAY' : 'NETBANKING'
+        paymentGateway: selectedPaymentMethod === 'CARD' ? 'STRIPE' : selectedPaymentMethod === 'UPI' ? 'RAZORPAY' : 'NETBANKING'
       }
 
+      console.log('Payment payload:', payload) // Debug log
       await paymentsApi.create(payload)
       
       // Navigate to confirmation page on success
