@@ -58,6 +58,14 @@ export const getLastOTPCreatedAt = async (email) => {
 	return rows.length > 0 ? rows[0].created_at : null;
 };
 
+export const getLatestOTPForEmail = async (email) => {
+	const [rows] = await pool.execute(
+		'SELECT created_at, expires_at FROM email_otps WHERE email = ? ORDER BY created_at DESC LIMIT 1',
+		[email]
+	);
+	return rows.length > 0 ? rows[0] : null;
+};
+
 // Check if OTP can be resent (not within last minute) and return remaining seconds
 export const canResendOTP = async (email, cooldownMinutes = 1) => {
 	const lastCreated = await getLastOTPCreatedAt(email);

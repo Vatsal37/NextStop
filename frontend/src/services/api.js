@@ -33,6 +33,7 @@ export const authApi = {
 	register: (payload) => api.post('/auth/register', payload),
 	verifyEmail: (payload) => api.post('/auth/verify-email', payload),
 	resendOTP: (payload) => api.post('/auth/resend-otp', payload),
+	getOtpStatus: (payload) => api.post('/auth/otp-status', payload),
 	forgotPassword: (payload) => api.post('/auth/forgot-password', payload),
 	verifyForgotPasswordOTP: (payload) => api.post('/auth/verify-forgot-password-otp', payload),
 	resetPassword: (payload) => api.post('/auth/reset-password', payload),

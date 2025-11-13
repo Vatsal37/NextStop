@@ -4,7 +4,7 @@ import { ApiResponse } from '../utils/ApiResponse.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { signJwt } from '../utils/jwt.util.js';
 import { createUser, findUserByEmail, findUserById, updateUserById, verifyUserEmail, updateUserPasswordByEmail } from '../models/user.model.js';
-import { generateOTP, storeOTP, verifyOTP, checkOTP, canResendOTP } from '../models/otp.model.js';
+import { generateOTP, storeOTP, verifyOTP, checkOTP, canResendOTP, getLatestOTPForEmail } from '../models/otp.model.js';
 import { sendOTPEmail, sendForgotPasswordOTPEmail } from '../utils/email.util.js';
 
 export const register = asyncHandler(async (req, res) => {
@@ -141,6 +141,41 @@ export const resendOTP = asyncHandler(async (req, res) => {
 	}
 	
 	return res.json(new ApiResponse(200, { message: 'OTP sent successfully' }, 'OTP sent to your email'));
+});
+
+export const getOtpStatus = asyncHandler(async (req, res) => {
+	const { email } = req.body;
+	if (!email) {
+		throw new ApiError(400, 'email is required');
+	}
+
+	const otpRecord = await getLatestOTPForEmail(email);
+	if (!otpRecord) {
+		return res.json(new ApiResponse(200, {
+			hasOtp: false,
+			cooldownRemaining: 0,
+			expired: true,
+			expiresIn: 0
+		}, 'No OTP found'));
+	}
+
+	const createdAt = new Date(otpRecord.created_at);
+	const expiresAt = new Date(otpRecord.expires_at);
+	const now = new Date();
+
+	const elapsedSeconds = Math.floor((now - createdAt) / 1000);
+	const cooldownRemaining = Math.max(60 - elapsedSeconds, 0);
+	const expired = now >= expiresAt;
+	const expiresIn = expired ? 0 : Math.max(Math.floor((expiresAt - now) / 1000), 0);
+
+	return res.json(new ApiResponse(200, {
+		hasOtp: true,
+		cooldownRemaining,
+		expiresIn,
+		expired,
+		createdAt: createdAt.toISOString(),
+		expiresAt: expiresAt.toISOString()
+	}, 'OTP status fetched'));
 });
 
 export const updateMe = asyncHandler(async (req, res) => {

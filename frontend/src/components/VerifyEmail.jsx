@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router';
 import { authApi } from '../services/api.js';
 import Toast from './ui/Toast.jsx';
 import { signupBGImage, signupCover, logo } from '../assets/images/index.js';
 import { useDispatch } from 'react-redux';
 import { loginThunk, fetchMeThunk } from '../store/index.js';
+
+const COOLDOWN_SECONDS = 60;
 
 function VerifyEmail() {
   const navigate = useNavigate();
@@ -21,11 +23,30 @@ function VerifyEmail() {
   const [toastMessage, setToastMessage] = useState('');
   const [toastCode, setToastCode] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
-  const [hasSentInitialOTP, setHasSentInitialOTP] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const inputRefs = useRef([]);
   const closeTimeoutRef = useRef(null);
   const countdownIntervalRef = useRef(null);
+  const initKeyRef = useRef(null);
+
+  const fetchOtpStatus = useCallback(async () => {
+    if (!email) return null;
+    try {
+      const response = await authApi.getOtpStatus({ email });
+      const status = response?.data?.data ?? {};
+      const cooldownRemaining = status.cooldownRemaining ?? 0;
+      setRemainingSeconds(cooldownRemaining);
+      return {
+        cooldownRemaining,
+        expired: Boolean(status.expired),
+        hasOtp: Boolean(status.hasOtp),
+      };
+    } catch (error) {
+      console.error('[VERIFY_EMAIL] Failed to fetch OTP status:', error);
+      setRemainingSeconds(0);
+      return null;
+    }
+  }, [email]);
 
   // Countdown timer effect
   useEffect(() => {
@@ -53,7 +74,7 @@ function VerifyEmail() {
     };
   }, [remainingSeconds]);
 
-  const handleResendOTP = async (isInitial = false) => {
+  const handleResendOTP = useCallback(async (isInitial = false) => {
     if (!email) {
       setError('Please enter your email address');
       return;
@@ -63,25 +84,30 @@ function VerifyEmail() {
       setIsResending(true);
     }
     setError('');
+    setToastMessage('');
+    setToastCode(0);
 
     try {
       await authApi.resendOTP({ email });
       // Show toast after OTP is successfully sent
       setToastMessage(`OTP sent to ${email}`);
       setToastCode(200);
-      setRemainingSeconds(0); // Reset countdown
+      setRemainingSeconds(COOLDOWN_SECONDS); // optimistic update while we refresh status
       // Clear OTP inputs
       setOtp(['', '', '', '', '', '']);
       inputRefs.current[0]?.focus();
+      await fetchOtpStatus();
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to send OTP. Please try again.';
       const remainingSecs = err.response?.data?.remainingSeconds;
       
       if (err.response?.status === 429 && remainingSecs) {
-        // Rate limited - start countdown timer, show toast error
+        // Rate limited - update timer with actual remaining time, show informative message
+        // Don't show "OTP sent" - no new OTP was sent
         setRemainingSeconds(remainingSecs);
-        setToastMessage('Please wait before requesting a new OTP');
-        setToastCode(429);
+        setToastMessage(`We already sent a code. Please wait ${remainingSecs} seconds or use the OTP in your inbox.`);
+        setToastCode(200);
+        // Don't clear OTP inputs or reset anything - user can still use the existing OTP
       } else {
         setError(errorMessage);
         // Show error in toast as well
@@ -93,7 +119,7 @@ function VerifyEmail() {
         setIsResending(false);
       }
     }
-  };
+  }, [email, fetchOtpStatus]);
 
   useEffect(() => {
     if (!email) {
@@ -101,23 +127,40 @@ function VerifyEmail() {
       return;
     }
     setIsOpen(true);
-    
-    // Don't automatically resend OTP if coming from signup (OTP was already sent during registration)
-    // Only auto-resend if coming from login page (user needs a new OTP)
-    const fromSignup = fromPage === '/signup';
-    if (!hasSentInitialOTP && !fromSignup) {
-      setHasSentInitialOTP(true);
-      // Send OTP and show toast after it's sent
-      handleResendOTP(true);
-    } else if (!hasSentInitialOTP && fromSignup) {
-      // Mark as sent to prevent auto-resend, but don't actually resend
-      // OTP was already sent during registration
-      setHasSentInitialOTP(true);
-      setToastMessage(`OTP sent to ${email}`);
-      setToastCode(200);
+ 
+    const key = `${email ?? ''}|${fromPage ?? ''}`;
+    if (initKeyRef.current === key) {
+      return;
     }
+    initKeyRef.current = key;
+
+    // Don't automatically resend OTP if coming from signup (OTP was already sent during registration)
+    // Only auto-resend if coming from login page when OTP is missing/expired
+    const fromSignup = fromPage === '/signup';
+    fetchOtpStatus().then((status) => {
+      if (!status) return;
+
+      if (!fromSignup) {
+        if (!status.hasOtp || status.expired) {
+          handleResendOTP(true);
+          return;
+        }
+
+        if (status.cooldownRemaining > 0) {
+          setToastMessage(`OTP already sent. Please wait ${status.cooldownRemaining} seconds or use the code in your inbox.`);
+          setToastCode(200);
+        } else {
+          setToastMessage('Your previous OTP is still valid. Please use that to verify.');
+          setToastCode(200);
+        }
+      } else {
+        if (!status.hasOtp || status.expired) {
+          handleResendOTP(true);
+        }
+      }
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [email, navigate]);
+  }, [email, fromPage, navigate, fetchOtpStatus, handleResendOTP]);
 
   const handleOtpChange = (index, value) => {
     // Only allow digits
@@ -169,7 +212,7 @@ function VerifyEmail() {
 
     try {
       await authApi.verifyEmail({ email, otp: otpCode });
-      
+ 
       // After successful verification, automatically log the user in if password is available
       const password = location.state?.password || location.state?.formData?.password;
       
@@ -352,7 +395,7 @@ function VerifyEmail() {
                   disabled={isResending || remainingSeconds > 0}
                   className="text-sm font-semibold text-sky-900 hover:text-sky-950 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isResending ? 'Sending...' : 'Resend OTP'}
+                  {isResending ? 'Sending OTP...' : 'Resend OTP'}
                 </button>
                 {remainingSeconds > 0 && (
                   <span className="text-sm text-gray-500 font-medium">

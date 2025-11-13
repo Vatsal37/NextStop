@@ -21,7 +21,7 @@ function SignUp() {
   const [toastMessage, setToastMessage] = useState('');
   const [toastCode, setToastCode] = useState(0);
   const closeTimeoutRef = useRef(null);
-  
+
   // Form state
   const [formData, setFormData] = useState({
     firstName: location.state?.formData?.firstName || '',
@@ -65,14 +65,19 @@ function SignUp() {
       if (response.data?.data?.redirectToVerification) {
         setToastMessage('Please verify your email to continue.');
         setToastCode(200);
-        setTimeout(() => navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`, { state: { from: '/signup', formData } }), 1500);
+
+        setTimeout(() => navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`, {
+          state: { from: '/signup', formData }
+        }), 1500);
         return;
       }
       
       // Show success message and redirect to email verification
       setToastMessage('Registration successful! Please verify your email.');
       setToastCode(201);
-      setTimeout(() => navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`, { state: { from: '/signup', formData } }), 1500);
+      setTimeout(() => navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`, {
+        state: { from: '/signup', formData }
+      }), 1500);
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.message || 'Registration failed. Please try again.';
       

@@ -178,7 +178,7 @@ function Login() {
       setToastCode(200);
       setForgotPasswordStep('otp');
       setOtp(['', '', '', '', '', '']);
-      setRemainingSeconds(0);
+      setRemainingSeconds(60); // Start 60-second countdown timer
       otpInputRefs.current[0]?.focus();
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to send OTP. Please try again.';
@@ -265,7 +265,7 @@ function Login() {
       await authApi.forgotPassword({ email: forgotPasswordEmail });
       setToastMessage(`OTP sent to ${forgotPasswordEmail}`);
       setToastCode(200);
-      setRemainingSeconds(0);
+      setRemainingSeconds(60); // Start 60-second countdown timer
       setOtp(['', '', '', '', '', '']);
       otpInputRefs.current[0]?.focus();
     } catch (err) {
@@ -416,28 +416,51 @@ function Login() {
               </p>
             </div> */}
             <div>
-                <h2 
-                    className="text-4xl md:text-5xl text-white font-bold mb-5"
-                    // style={{ textShadow: '2px 2px 8px rgba(255,255,255,0.5)' }}
-                >
-                    YOUR<br />
-                    NEXT ADVENTURE<br />
-                    AWAITS!
-                </h2>
-                
-                <p 
-                    className="text-white text-base md:text-md mb-3 leading-tight max-w-md font-medium"
-                    // style={{ textShadow: '1px 1px 4px rgba(255,255,255,0.3)' }}
-                >
-                    Log in to unlock exclusive deals, plan your dream escapes, and pick up where you left off. Whether it's mountains, beaches, or city lights
-                </p>
-                
-                <p 
-                    className="text-white text-md font-medium"
-                    // style={{ textShadow: '1px 1px 4px rgba(255,255,255,0.3)' }}
-                >
-                    Your journey starts here.
-                </p>
+                {forgotPasswordStep === 'newPassword' ? (
+                  <>
+                    <h2 
+                        className="text-4xl md:text-5xl text-white font-bold mb-5"
+                    >
+                        CREATE<br />
+                        YOUR NEW<br />
+                        PASSWORD
+                    </h2>
+                    
+                    <p 
+                        className="text-white text-base md:text-md mb-3 leading-tight max-w-md font-medium"
+                    >
+                        Choose a strong, secure password to protect your account. Make sure it's unique and memorable for you.
+                    </p>
+                    
+                    <p 
+                        className="text-white text-md font-medium"
+                    >
+                        Your security matters to us.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h2 
+                        className="text-4xl md:text-5xl text-white font-bold mb-5"
+                    >
+                        YOUR<br />
+                        NEXT ADVENTURE<br />
+                        AWAITS!
+                    </h2>
+                    
+                    <p 
+                        className="text-white text-base md:text-md mb-3 leading-tight max-w-md font-medium"
+                    >
+                        Log in to unlock exclusive deals, plan your dream escapes, and pick up where you left off. Whether it's mountains, beaches, or city lights
+                    </p>
+                    
+                    <p 
+                        className="text-white text-md font-medium"
+                    >
+                        Your journey starts here.
+                    </p>
+                  </>
+                )}
             </div>
           </div>
 
